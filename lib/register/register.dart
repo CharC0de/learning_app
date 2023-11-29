@@ -326,6 +326,12 @@ class _UserRegistrationState extends State<UserRegistration> {
                 TextFormField(
                   decoration: passDecoration(
                       'Confirm Password', _obscureConfirmPassword),
+                  onSaved: (newValue) {
+                    userForm["password"] = newValue;
+                    newValue = "";
+                    _passwordController.text = "";
+                    _confirmPasswordController.text = "";
+                  },
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   validator: (value) {
