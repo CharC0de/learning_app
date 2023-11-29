@@ -311,6 +311,8 @@ class _UserRegistrationState extends State<UserRegistration> {
                   onSaved: (newValue) {
                     userForm["password"] = newValue;
                     newValue = "";
+                    _passwordController.text = "";
+                    _confirmPasswordController.text = "";
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
