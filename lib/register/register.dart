@@ -352,12 +352,14 @@ class _UserRegistrationState extends State<UserRegistration> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           _formKey.currentState!.save();
-                          debugPrint(userForm.toString());
                           registerUserWithProfile(userForm);
                           debugPrint(userForm.toString());
                           setState(() {
                             success = "Register Success!";
                             _formKey.currentState!.reset();
+                          _passwordController.clear();
+                          _confirmPasswordController.clear();
+                          debugPrint(userForm.toString());
                           });
                         }
                       },

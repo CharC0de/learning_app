@@ -187,7 +187,7 @@ class _LoginState extends State<Login> {
                               },
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Enter password';
+                                  return 'Enter email';
                                 }
                                 return null;
                               },
