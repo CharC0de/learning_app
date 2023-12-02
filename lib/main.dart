@@ -191,12 +191,15 @@ class _LoginState extends State<Login> {
                                 }
                                 return null;
                               },
+                              keyboardType: TextInputType.emailAddress,
                               decoration: const InputDecoration(
                                 prefixIcon: Icon(
                                   Icons.email,
                                 ),
                                 hintText: "email",
-                              ))),
+                              )
+                          )
+                          ),
                           inpContainer(TextFormField(
                             onSaved: (value) {
                               credentials["password"] = value;
@@ -207,6 +210,7 @@ class _LoginState extends State<Login> {
                               }
                               return null;
                             },
+                            keyboardType: TextInputType.visiblePassword,
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.lock),
                               suffixIcon: GestureDetector(
@@ -225,11 +229,13 @@ class _LoginState extends State<Login> {
                                         : Icons.visibility_off,
                                     color:
                                         Theme.of(context).colorScheme.primary,
-                                  )),
+                                  )
+                              ),
                               hintText: "password",
                             ),
                             obscureText: hidePass,
-                          )),
+                          )
+                          ),
                           Text(
                             error,
                             style: const TextStyle(color: Colors.red),
