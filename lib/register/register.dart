@@ -8,6 +8,8 @@ import '../utilities/util.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'alert_dialog_register.dart';
+
 
 class UserRegistration extends StatefulWidget {
   const UserRegistration({super.key, required this.type});
@@ -345,33 +347,41 @@ class _UserRegistrationState extends State<UserRegistration> {
                           builder: (context) => choosePfpPopup(context)),
                       child: const Text(
                         'Take a Profile Photo',
-                        style: TextStyle(color: Colors.white, fontSize: 22),
+                        style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
                     )),
                     buttonStyle(FilledButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
                           _formKey.currentState!.save();
                           registerUserWithProfile(userForm);
                           debugPrint(userForm.toString());
                           setState(() {
-                            success = "Register Success!";
+                            success = 'Register Success';
                             _formKey.currentState!.reset();
                           _passwordController.clear();
                           _confirmPasswordController.clear();
                           debugPrint(userForm.toString());
                           });
                         }
+                        final action = AlertDialogRegister.showSuccessDialog(
+                          context,
+                          'Registered Successfully',
+                          'You have successfully registered.',
+                        );
                       },
                       child: const Text(
                         'Register',
                         style: TextStyle(color: Colors.white, fontSize: 22),
                       ),
-                    )),
+                    )
+                    ),
                     Text(
                       success,
                       style: const TextStyle(
-                          color: Colors.green, fontWeight: FontWeight.w400),
+                          color: Colors.green,
+                          fontWeight: FontWeight.w400
+                      ),
                     ),
                   ]),
                 ),

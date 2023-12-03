@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../main.dart';
 
-enum DialogsAction { Yes, Cancel }
+enum DialogsAction {
+  Yes,
+  Cancel
+}
 
 class AlertDialogs {
   static Future<DialogsAction> yesCancelDialog(
