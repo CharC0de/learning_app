@@ -165,7 +165,7 @@ class _LoginState extends State<Login> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ClipOval(
+            SizedBox(
               child: Image.asset(
                 'images/Logo.png',
                 fit: BoxFit.cover,
