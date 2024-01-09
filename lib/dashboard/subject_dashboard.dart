@@ -457,7 +457,7 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
 
   Future<Widget> getTeachPfp(String teacherId) async {
     try {
-      dynamic `` teachPic = "";
+      dynamic teachPic = "";
       String uname = "";
       dynamic resData;
 
