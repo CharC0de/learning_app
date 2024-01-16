@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:learning_app/dashboard/subject_dashboard.dart';
-import 'package:learning_app/utilities/util.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -58,6 +57,7 @@ class _CreateActivityState extends State<CreateActivity>
 
   Map<String, dynamic> assignForm = {
     "assignDesc": "",
+    "announceDate": Timestamp.now().toDate(),
     "assignDlDate": "",
     "assignDlTime": "",
     "actType": "assignment",
@@ -208,24 +208,23 @@ class _CreateActivityState extends State<CreateActivity>
                 key: _announceFormKey,
                 child: Column(
                   children: [
-                    inpContainer(
-                      TextFormField(
-                          maxLines: 5,
-                          decoration: const InputDecoration(
-                            alignLabelWithHint: true,
-                            labelText: "Announcement Description",
-                          ),
-                          onSaved: (value) {
-                            announceForm["announceDesc"] = value;
-                            value = "";
-                          },
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Enter Announcement Description';
-                            }
-                            return null;
-                          }),
-                    ),
+                    TextFormField(
+                        maxLines: 5,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          alignLabelWithHint: true,
+                          labelText: "Announcement Description",
+                        ),
+                        onSaved: (value) {
+                          announceForm["announceDesc"] = value;
+                          value = "";
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Enter Announcement Description';
+                          }
+                          return null;
+                        }),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -259,7 +258,12 @@ class _CreateActivityState extends State<CreateActivity>
                         )),
                     Align(
                         alignment: Alignment.centerRight,
-                        child: ElevatedButton(
+                        child: FilledButton(
+                          style: ButtonStyle(
+                              shape: MaterialStateProperty.all(
+                                  const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(10))))),
                           onPressed: pickFiles,
                           child: const Text('Select Files'),
                         )),
@@ -299,8 +303,10 @@ class _CreateActivityState extends State<CreateActivity>
                 child: Center(
                     child: Column(
                   children: [
-                    inpContainer(
-                      TextFormField(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      child: TextFormField(
                           decoration:
                               inpDecoration('Assignment Title', Icons.book),
                           onSaved: (value) {
@@ -314,10 +320,13 @@ class _CreateActivityState extends State<CreateActivity>
                             return null;
                           }),
                     ),
-                    inpContainer(
-                      TextFormField(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      child: TextFormField(
                           maxLines: 5,
                           decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
                             alignLabelWithHint: true,
                             labelText: "Assignment Description",
                           ),
@@ -333,47 +342,58 @@ class _CreateActivityState extends State<CreateActivity>
                           }),
                     ),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      hContainer(TextFormField(
-                          onSaved: (value) {
-                            assignForm["assignDlDate"] = value;
-                          },
-                          controller: dlDate,
-                          decoration: inpDecoration(
-                              'Deadline Date', Icons.calendar_month),
-                          enabled: false,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Enter Deadline Date';
-                            }
-                            return null;
-                          })),
-                      hContainer(TextFormField(
-                          onSaved: (value) {
-                            assignForm["assignDlTime"] = value;
-                          },
-                          controller: timeEnd,
-                          decoration: inpDecoration(
-                              'Deadline Time', Icons.access_time_filled),
-                          enabled: false,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Enter End Time';
-                            }
-                            return null;
-                          })),
-                    ]),
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      hContainer(FilledButton(
-                          onPressed: () async {
-                            dlDate.text =
-                                await _showDatePickerRTL(context) as String;
-                          },
-                          child: const Text("Set Date"))),
-                      hContainer(FilledButton(
-                          onPressed: () async {
-                            timeEnd.text = await _showTimePicker() as String;
-                          },
-                          child: const Text("Set Time"))),
+                      SizedBox(
+                          width: MediaQuery.of(context).size.width * .48,
+                          child: TextButton(
+                              onPressed: () async {
+                                dlDate.text =
+                                    await _showDatePickerRTL(context) as String;
+                              },
+                              child: TextFormField(
+                                  onSaved: (value) {
+                                    assignForm["assignDlDate"] = value;
+                                  },
+                                  controller: dlDate,
+                                  decoration: InputDecoration(
+                                      labelStyle: TextStyle(
+                                          color: Theme.of(context).primaryColor,
+                                          fontWeight: FontWeight.w500),
+                                      labelText: 'Deadline Date',
+                                      prefixIcon:
+                                          const Icon(Icons.calendar_month)),
+                                  enabled: false,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Enter Deadline Date';
+                                    }
+                                    return null;
+                                  }))),
+                      SizedBox(
+                          width: MediaQuery.of(context).size.width * .48,
+                          child: TextButton(
+                              onPressed: () async {
+                                timeEnd.text =
+                                    await _showTimePicker() as String;
+                              },
+                              child: TextFormField(
+                                  onSaved: (value) {
+                                    assignForm["assignDlTime"] = value;
+                                  },
+                                  controller: timeEnd,
+                                  decoration: InputDecoration(
+                                      labelText: 'Deadline Time',
+                                      labelStyle: TextStyle(
+                                          color: Theme.of(context).primaryColor,
+                                          fontWeight: FontWeight.w500),
+                                      prefixIcon:
+                                          const Icon(Icons.access_time_filled)),
+                                  enabled: false,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Enter End Time';
+                                    }
+                                    return null;
+                                  }))),
                     ]),
                     buttonStyle(FilledButton(
                       onPressed: () {

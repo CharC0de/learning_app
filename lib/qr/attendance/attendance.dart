@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:learning_app/utilities/server_util.dart';
 
 class AttendancePage extends StatefulWidget {
-  const AttendancePage({super.key, required this.sessId});
+  const AttendancePage({super.key, required this.sessId, this.status});
   final String sessId;
+  final bool? status;
   @override
   State<AttendancePage> createState() => _AttendancePageState();
 }
@@ -16,8 +17,8 @@ class _AttendancePageState extends State<AttendancePage> {
   StreamSubscription? attendStream;
   @override
   initState() {
-    super.initState();
     getAttend();
+    super.initState();
   }
 
   dynamic attendData = {};
@@ -26,10 +27,12 @@ class _AttendancePageState extends State<AttendancePage> {
         .child('/sessions/${widget.sessId}/students/')
         .onValue
         .listen((event) {
-      if (event.snapshot.value != null) {
-        setState(() {
-          attendData = event.snapshot.value;
-        });
+      if (context.mounted) {
+        if (event.snapshot.value != null) {
+          setState(() {
+            attendData = event.snapshot.value;
+          });
+        }
       }
       debugPrint('$attendData');
     });
@@ -121,6 +124,27 @@ class _AttendancePageState extends State<AttendancePage> {
                 })
             : const Center(
                 child: Text('No one Has Attended yet'),
-              ));
+              ),
+        persistentFooterAlignment: AlignmentDirectional.center,
+        persistentFooterButtons: widget.status == null
+            ? [
+                FilledButton(
+                    onPressed: () async {
+                      await dbref
+                          .child('sessions/${widget.sessId}/active/')
+                          .set(false);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: const Text('End Session'))
+              ]
+            : null);
+  }
+
+  @override
+  void deactivate() {
+    attendStream!.cancel();
+    super.deactivate();
   }
 }

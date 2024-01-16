@@ -27,8 +27,6 @@ class _UserRegistrationState extends State<UserRegistration> {
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   final storageRef = FirebaseStorage.instance;
@@ -311,8 +309,6 @@ class _UserRegistrationState extends State<UserRegistration> {
                   onSaved: (newValue) {
                     userForm["password"] = newValue;
                     newValue = "";
-                    _passwordController.text = "";
-                    _confirmPasswordController.text = "";
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -326,14 +322,10 @@ class _UserRegistrationState extends State<UserRegistration> {
                 TextFormField(
                   decoration: passDecoration(
                       'Confirm Password', _obscureConfirmPassword),
-                  onSaved: (newValue) {
-                    userForm["password"] = newValue;
-                    newValue = "";
-                    _passwordController.text = "";
-                    _confirmPasswordController.text = "";
-                  },
-                  controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
+                  onSaved: (value) {
+                    value = '';
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Confirm your password';
@@ -364,6 +356,7 @@ class _UserRegistrationState extends State<UserRegistration> {
                           setState(() {
                             success = "Register Success!";
                             _formKey.currentState!.reset();
+                            _passwordController.clear();
                           });
                         }
                       },

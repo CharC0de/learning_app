@@ -7,7 +7,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class CreateSubject extends StatefulWidget {
-  const CreateSubject({super.key});
+  const CreateSubject({super.key, this.id, this.data});
+  final String? id;
+  final Map<dynamic, dynamic>? data;
   @override
   State<CreateSubject> createState() => _CreateSubjectState();
 }
@@ -16,6 +18,14 @@ class _CreateSubjectState extends State<CreateSubject> {
   @override
   void initState() {
     super.initState();
+    if (widget.id != null) {
+      titleCon.text = widget.data!['subName'];
+      descCon.text = widget.data!['subDesc'];
+      timeStart.text = widget.data!['subTimeStart'];
+      timeEnd.text = widget.data!['subTimeEnd'];
+      chosenItem1 = widget.data!['meetingOne'];
+      chosenItem2 = widget.data!['meetingTwo'];
+    }
 
     setState(() {
       subjectForm['teacherId'] = userRef.currentUser!.uid;
@@ -23,10 +33,12 @@ class _CreateSubjectState extends State<CreateSubject> {
   }
 
   final _formKey = GlobalKey<FormState>();
+  String? chosenItem1;
+  String? chosenItem2;
   TextEditingController timeStart = TextEditingController();
   TextEditingController timeEnd = TextEditingController();
-  TextEditingController firstMeet = TextEditingController();
-  TextEditingController secondMeet = TextEditingController();
+  TextEditingController titleCon = TextEditingController();
+  TextEditingController descCon = TextEditingController();
   StreamSubscription? userStream;
   final storeRef = FirebaseStorage.instance.ref();
   final dbRef = FirebaseDatabase.instanceFor(
@@ -57,7 +69,7 @@ class _CreateSubjectState extends State<CreateSubject> {
 
   SizedBox hContainer(Widget widget) {
     return SizedBox(
-        width: MediaQuery.of(context).size.width / 2.1,
+        width: MediaQuery.of(context).size.width * .48,
         child: Container(margin: const EdgeInsets.all(5), child: widget));
   }
 
@@ -87,7 +99,7 @@ class _CreateSubjectState extends State<CreateSubject> {
       debugPrint('Selected time: $time');
       return time;
     }
-    return "00:00 PM";
+    return "00:00 AM";
   }
 
   InputDecoration inpDecoration(String identifier, IconData? icon) =>
@@ -102,121 +114,180 @@ class _CreateSubjectState extends State<CreateSubject> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("Create Subject")),
-        body: SingleChildScrollView(
+      appBar: AppBar(
+          title: Text("${widget.id != null ? 'Edit' : "Create"} Subject")),
+      body: SingleChildScrollView(
           child: Form(
               key: _formKey,
               child: Center(
                   child: Column(
                 children: [
-                  inpContainer(
-                    TextFormField(
-                        decoration: inpDecoration('Subject Title', Icons.book),
-                        onSaved: (value) {
-                          subjectForm["subName"] = value;
-                          value = "";
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Enter Subject Title';
-                          }
-                          return null;
-                        }),
-                  ),
-                  inpContainer(
-                    TextFormField(
-                        maxLines: 5,
-                        decoration: const InputDecoration(
-                          alignLabelWithHint: true,
-                          labelText: "Subject Description",
-                        ),
-                        onSaved: (value) {
-                          subjectForm["subDesc"] = value;
-                          value = "";
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Enter Subject Description';
-                          }
-                          return null;
-                        }),
-                  ),
+                  Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: TextFormField(
+                          controller: titleCon,
+                          decoration: const InputDecoration(
+                              labelStyle:
+                                  TextStyle(fontWeight: FontWeight.bold),
+                              prefixIcon: Icon(Icons.book),
+                              labelText: 'Subject Title'),
+                          onSaved: (value) {
+                            subjectForm["subName"] = value;
+                            value = "";
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Enter Subject Title';
+                            }
+                            return null;
+                          })),
+                  Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      height: 200,
+                      child: TextFormField(
+                          controller: descCon,
+                          textAlignVertical: TextAlignVertical.top,
+                          maxLines: null,
+                          expands: true,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            alignLabelWithHint: true,
+                            labelText: "Subject Description",
+                          ),
+                          onSaved: (value) {
+                            subjectForm["subDesc"] = value;
+                            value = "";
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Enter Subject Description';
+                            }
+                            return null;
+                          })),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    hContainer(TextFormField(
-                        onSaved: (value) {
-                          subjectForm["subTimeStart"] = value;
-                        },
-                        controller: timeStart,
-                        decoration: inpDecoration(
-                            'Start Time', Icons.access_time_rounded),
-                        enabled: false,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Enter Start Time';
-                          }
-                          return null;
-                        })),
-                    hContainer(TextFormField(
-                        onSaved: (value) {
-                          subjectForm["subTimeEnd"] = value;
-                        },
-                        controller: timeEnd,
-                        decoration:
-                            inpDecoration('Time End', Icons.access_time_filled),
-                        enabled: false,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Enter End Time';
-                          } else if (timeStart.text == timeEnd.text) {
-                            return 'Time should at least be not equal';
-                          }
-                          return null;
-                        })),
-                  ]),
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    hContainer(FilledButton(
+                    TextButton(
+                        style: ButtonStyle(
+                            padding:
+                                MaterialStateProperty.all(EdgeInsets.zero)),
                         onPressed: () async {
                           timeStart.text = await _showTimePicker() as String;
                         },
-                        child: const Text("Set start"))),
-                    hContainer(FilledButton(
+                        child: hContainer(TextFormField(
+                            onSaved: (value) {
+                              subjectForm["subTimeStart"] = value;
+                            },
+                            controller: timeStart,
+                            decoration: InputDecoration(
+                                labelStyle: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.w500),
+                                labelText: 'Start Time',
+                                prefixIcon:
+                                    const Icon(Icons.access_time_rounded)),
+                            enabled: false,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Enter Start Time';
+                              }
+                              return null;
+                            }))),
+                    TextButton(
+                        style: ButtonStyle(
+                            padding:
+                                MaterialStateProperty.all(EdgeInsets.zero)),
                         onPressed: () async {
                           timeEnd.text = await _showTimePicker() as String;
                         },
-                        child: const Text("Set end"))),
+                        child: hContainer(TextFormField(
+                            onSaved: (value) {
+                              subjectForm["subTimeEnd"] = value;
+                            },
+                            controller: timeEnd,
+                            decoration: InputDecoration(
+                                labelStyle: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.w500),
+                                labelText: 'Time End',
+                                prefixIcon:
+                                    const Icon(Icons.access_time_filled)),
+                            enabled: false,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Enter End Time';
+                              } else if (timeStart.text == timeEnd.text) {
+                                return 'Time should at least be not equal';
+                              }
+                              return null;
+                            }))),
                   ]),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    hContainer(TextFormField(
-                        onSaved: (value) {
-                          subjectForm["meetingOne"] = value;
-                        },
-                        controller: firstMeet,
-                        decoration:
-                            inpDecoration('First Meet', Icons.school_outlined),
-                        enabled: false,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Set First Meet';
-                          }
-                          return null;
-                        })),
-                    hContainer(TextFormField(
-                        onSaved: (value) {
-                          subjectForm["meetingTwo"] = value;
-                        },
-                        controller: secondMeet,
-                        decoration: inpDecoration('Second Meet', Icons.school),
-                        enabled: false,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Set Second Meet';
-                          } else if (secondMeet.text == firstMeet.text) {
-                            return 'Days should at least be not equal';
-                          }
-                          return null;
-                        })),
+                    Container(
+                        margin: EdgeInsets.symmetric(horizontal: 5),
+                        width: MediaQuery.of(context).size.width * .45,
+                        child: DropdownButtonFormField(
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Set First Meet';
+                              } else if (chosenItem1 == chosenItem2) {
+                                return 'Days should at least be not equal';
+                              }
+                              return null;
+                            },
+                            value: chosenItem1,
+                            onSaved: (value) {
+                              subjectForm["meetingOne"] = value;
+                            },
+                            hint: const Text('Set First Meet'),
+                            items: [
+                              ...items
+                                  .map<DropdownMenuItem<String>>((String item) {
+                                return DropdownMenuItem<String>(
+                                  value: item,
+                                  child: Text(item),
+                                );
+                              })
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                chosenItem1 = value;
+                              });
+                            })),
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 5),
+                      width: MediaQuery.of(context).size.width * .45,
+                      child: DropdownButtonFormField(
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Set Second Meet';
+                            } else if (chosenItem1 == chosenItem2) {
+                              return 'Days should at least be not equal';
+                            }
+                            return null;
+                          },
+                          value: chosenItem2,
+                          onSaved: (value) {
+                            subjectForm["meetingTwo"] = value;
+                          },
+                          hint: const Text('Set Second Meet'),
+                          items: [
+                            ...items
+                                .map<DropdownMenuItem<String>>((String item) {
+                              return DropdownMenuItem<String>(
+                                value: item,
+                                child: Text(item),
+                              );
+                            })
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              chosenItem2 = value;
+                            });
+                          }),
+                    )
                   ]),
-                  Row(
+
+                  /*Row(
                     children: [
                       hContainer(Column(
                         children: [
@@ -251,31 +322,31 @@ class _CreateSubjectState extends State<CreateSubject> {
                         ],
                       ))
                     ],
-                  ),
-                  buttonStyle(FilledButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        dbRef
-                            .child("subjects/")
-                            .push()
-                            .set(subjectForm)
-                            .then((_) {
-                          debugPrint(
-                              'Data saved with unique ID: ${dbRef.child("subjects/").key}');
-                        }).catchError((error) {
-                          debugPrint('Error saving data: $error');
-                        });
-                        debugPrint(subjectForm.toString());
-                      }
-                    },
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(color: Colors.white, fontSize: 22),
-                    ),
-                  )),
+                  ),*/
                 ],
-              ))),
-        ));
+              )))),
+      persistentFooterButtons: [
+        buttonStyle(FilledButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+              widget.id != null
+                  ? dbRef.child("subjects/${widget.id}").update(subjectForm)
+                  : dbRef.child("subjects/").push().set(subjectForm).then((_) {
+                      debugPrint(
+                          'Data saved with unique ID: ${dbRef.child("subjects/").key}');
+                    }).catchError((error) {
+                      debugPrint('Error saving data: $error');
+                    });
+              debugPrint(subjectForm.toString());
+            }
+          },
+          child: Text(
+            widget.id != null ? 'Save Changes' : 'Create',
+            style: const TextStyle(color: Colors.white, fontSize: 22),
+          ),
+        )),
+      ],
+    );
   }
 }

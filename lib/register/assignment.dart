@@ -166,14 +166,18 @@ class _AssignmentFormState extends State<AssignmentForm> {
     }
   }
 
-  Card response(
+  Container response(
     BuildContext context, {
     String? date,
     String? comment,
     dynamic list,
     String? studId,
   }) {
-    return Card(
+    return Container(
+      margin: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          border: Border.all(color: Theme.of(context).primaryColor)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -206,7 +210,7 @@ class _AssignmentFormState extends State<AssignmentForm> {
             Visibility(
               visible: list.isNotEmpty,
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 5),
+                margin: const EdgeInsets.symmetric(horizontal: 15),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

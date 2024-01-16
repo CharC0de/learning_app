@@ -18,7 +18,7 @@ class DashBoard extends StatefulWidget {
 }
 
 class _DashBoardState extends State<DashBoard> {
-  bool deleteMode = false;
+  bool writeMode = false;
   List<String> subjectIds = [];
 
   @override
@@ -116,38 +116,41 @@ class _DashBoardState extends State<DashBoard> {
   }
 
   Container detailValue(String type, String time, context) {
-    IconData? icon;
+    Widget icon = Padding(
+        padding: EdgeInsets.only(right: writeMode ? 0 : 5),
+        child: Icon(
+          Icons.calendar_month,
+          color: Theme.of(context).colorScheme.primary,
+        ));
     switch (type) {
       case "Start":
         type += " time";
-        icon = Icons.access_time;
       case "End":
         type += " time";
-        icon = Icons.access_time_filled;
       default:
-        icon = Icons.calendar_month;
+        icon;
         break;
     }
 
     return Container(
-        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-        child: Row(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Column(
           children: [
-            Padding(
-                padding: const EdgeInsets.only(right: 5),
-                child: Icon(
-                  icon,
-                  color: Theme.of(context).colorScheme.primary,
-                )),
             Row(
               children: [
+                type != "Start time" && type != "End time"
+                    ? icon
+                    : const SizedBox(),
                 Text.rich(TextSpan(children: [
                   TextSpan(
                     text: '$type: ',
                     style: const TextStyle(
                         fontWeight: FontWeight.w600, fontSize: 12),
                   ),
-                  TextSpan(text: time)
+                  TextSpan(
+                      text: time,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface))
                 ]))
               ],
             )
@@ -172,8 +175,12 @@ class _DashBoardState extends State<DashBoard> {
         Expanded(
           child: TextButton(
             style: ButtonStyle(
+              shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              )),
               padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                const EdgeInsets.all(5),
+                EdgeInsets.only(
+                    top: 15, bottom: 15, right: writeMode ? 0 : 15, left: 15),
               ),
             ),
             onPressed: () {
@@ -181,7 +188,12 @@ class _DashBoardState extends State<DashBoard> {
                   builder: (context) => SubjectDashboard(
                       details: data!, id: id!, type: widget.type)));
             },
-            child: Card(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              decoration: BoxDecoration(
+                border: Border.all(color: Theme.of(context).primaryColor),
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -192,32 +204,36 @@ class _DashBoardState extends State<DashBoard> {
                     ),
                     child: Text(
                       title!,
-                      style: const TextStyle(
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.tertiary,
                         fontWeight: FontWeight.w600,
                         fontSize: 30,
                       ),
                     ),
                   ),
-                  Wrap(
-                    direction: Axis.vertical,
-                    children: [
-                      detailValue("Start", start!, context),
-                      detailValue("End", end!, context),
-                    ],
-                  ),
-                  detailValue(
-                    "Meeting Days",
-                    (meet1 == "Thursday"
-                            ? "${meet1!.characters.first}h"
-                            : meet1!.characters.first) +
-                        (meet2 == "Thursday"
-                            ? "${meet2!.characters.first}h"
-                            : meet2!.characters.first),
-                    context,
-                  ),
                   if (widget.type == "Student")
                     FutureBuilder(
-                        future: getTeachPfp(teacherId!), builder: assetBuilder)
+                      future: getTeachPfp(teacherId!),
+                      builder: assetBuilder,
+                    ),
+                  Padding(
+                      padding: const EdgeInsets.only(left: 10, bottom: 15),
+                      child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.access_time_filled),
+                            Column(
+                              children: [
+                                detailValue("Start", start!, context),
+                                detailValue("End", end!, context),
+                              ],
+                            )
+                          ])),
+                  detailValue(
+                    "Meeting Days",
+                    meet1! + "s & " + meet2! + "s",
+                    context,
+                  ),
                 ],
               ),
             ),
@@ -225,16 +241,25 @@ class _DashBoardState extends State<DashBoard> {
         ),
         if (widget.type == "Teacher")
           Visibility(
-            visible: deleteMode,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 5),
-              child: IconButton(
+            visible: writeMode,
+            child: Row(children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) =>
+                          CreateSubject(data: data!, id: id!)));
+                },
+              ),
+              IconButton(
+                padding: EdgeInsets.zero,
                 icon: const Icon(Icons.delete),
                 onPressed: () {
                   dbRef.child('subjects/$id').remove();
                 },
               ),
-            ),
+            ]),
           ),
       ],
     );
@@ -343,7 +368,14 @@ class _DashBoardState extends State<DashBoard> {
           uname = resData["uName"];
         }
       }
-
+      var name =
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(resData["uName"]),
+        const Text(
+          'Teacher',
+          style: TextStyle(color: Colors.blueGrey),
+        )
+      ]);
       if (teachPic != null) {
         final ref =
             FirebaseStorage.instance.ref().child("$teacherId/$teachPic");
@@ -359,10 +391,7 @@ class _DashBoardState extends State<DashBoard> {
                   backgroundImage: NetworkImage(url),
                 ),
               )),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 5),
-            child: Text(resData["uName"]),
-          ),
+          name
         ]);
       } else {
         return Row(
@@ -371,10 +400,7 @@ class _DashBoardState extends State<DashBoard> {
               Icons.account_circle,
               size: 35,
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 5),
-              child: Text(resData["uName"]),
-            ),
+            name
           ],
         );
       }
@@ -386,6 +412,17 @@ class _DashBoardState extends State<DashBoard> {
         size: 35,
       );
     }
+  }
+
+  final white = Colors.white;
+  Widget editIcon() {
+    return FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            writeMode = !writeMode;
+          });
+        },
+        child: const Icon(Icons.edit_square));
   }
 
   Widget assetBuilder(context, snapshot) {
@@ -430,10 +467,41 @@ class _DashBoardState extends State<DashBoard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: const Text("Subjects"),
-          actions: [
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text("Subjects"),
+      ),
+      body: hasSubs(item),
+      floatingActionButton: editIcon(),
+      bottomNavigationBar: BottomAppBar(
+          height: 60,
+          color: Theme.of(context).appBarTheme.backgroundColor,
+          child:
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            IconButton(
+              color: white,
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const Login()));
+              },
+              icon: const Icon(Icons.home_filled),
+            ),
+            widget.type == "Teacher"
+                ? Container(
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                        shape: BoxShape.circle),
+                    child: IconButton(
+                        onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (context) => const CreateSubject())),
+                        icon: const Icon(Icons.add)))
+                : IconButton(
+                    onPressed: () => showDialog<String>(
+                        context: context,
+                        builder: (context) => chooseSubPopup(context)),
+                    icon: const Icon(Icons.add)),
             iconContainer(GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute(
@@ -443,65 +511,9 @@ class _DashBoardState extends State<DashBoard> {
                   future: getPfp(),
                   builder: (context, snapshot) =>
                       assetBuilder(context, snapshot),
-                ))),
-            IconButton(
-              onPressed: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const Login()));
-              },
-              icon: const Icon(Icons.logout_outlined),
-            )
-          ],
-        ),
-        body: hasSubs(item),
-        persistentFooterAlignment: AlignmentDirectional.center,
-        persistentFooterButtons: [
-          widget.type == "Teacher"
-              ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  buttonStyle(SizedBox(
-                    width: MediaQuery.of(context).size.width / 2.3,
-                    child: FilledButton(
-                        onPressed: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const CreateSubject()));
-                        },
-                        child: const Text(
-                          "Add Subject",
-                          style: TextStyle(fontSize: 16),
-                        )),
-                  )),
-                  buttonStyle(SizedBox(
-                    width: MediaQuery.of(context).size.width / 2.3,
-                    child: FilledButton(
-                        onPressed: () {
-                          setState(() {
-                            deleteMode = !deleteMode;
-                          });
-                        },
-                        child: const Text(
-                          "Edit Subject",
-                          style: TextStyle(fontSize: 16),
-                        )),
-                  ))
-                ])
-              : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  buttonStyle(SizedBox(
-                    width: MediaQuery.of(context).size.width -
-                        MediaQuery.of(context).size.width * .25,
-                    child: FilledButton(
-                        onPressed: () {
-                          showDialog<String>(
-                              context: context,
-                              builder: (context) => chooseSubPopup(context));
-                        },
-                        child: const Text(
-                          "Add Subject",
-                          style: TextStyle(fontSize: 16),
-                        )),
-                  )),
-                ])
-        ]);
+                )))
+          ])),
+    );
   }
 
   @override

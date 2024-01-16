@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +52,7 @@ class _ResultScreenState extends State<ResultScreen> {
     });
 
     final sessionVal = {
+      "sessionDate": Timestamp.now().toDate(),
       'active': true,
       'teacherId': userRef.currentUser!.uid,
       'subjectId': widget.id,

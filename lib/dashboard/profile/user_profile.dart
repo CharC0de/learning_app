@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../main.dart';
+import '../../teacher/sessions.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -15,10 +16,12 @@ class UserProfile extends StatefulWidget {
 class _UserProfile extends State<UserProfile> {
   @override
   initState() {
-    super.initState();
     getUserData();
+
+    super.initState();
   }
 
+  var sessData = {};
   final Map<String, dynamic> userData = {
     "uName": "",
     "fName": "",
@@ -225,6 +228,16 @@ class _UserProfile extends State<UserProfile> {
           },
         )),
       ),
+      persistentFooterAlignment: AlignmentDirectional.center,
+      persistentFooterButtons: [
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SessionData()));
+          },
+          child: const Text('Sessions'),
+        )
+      ],
     );
   }
 

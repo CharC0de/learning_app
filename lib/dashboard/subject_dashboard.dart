@@ -53,7 +53,7 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
     Clipboard.setData(ClipboardData(text: widget.id));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Copied to clipboard: ${widget.id}'),
+        content: Text('Copied Subject ID to clipboard: ${widget.id}'),
       ),
     );
   }
@@ -83,7 +83,12 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
             event.snapshot.value as Map<dynamic, dynamic>);
         debugPrint(resData.toString());
         setState(() {
-          actData = resData;
+          List<MapEntry<dynamic, dynamic>> sortedMap = resData.entries.toList();
+
+          sortedMap.sort((a, b) =>
+              b.value['announceDate'].compareTo(a.value['announceDate']));
+
+          actData = Map.fromEntries(sortedMap);
         });
       } else {
         debugPrint("No data");
@@ -191,8 +196,11 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
     String? meet2,
   }) {
     return Expanded(
-        child: Card(
-      margin: const EdgeInsets.only(bottom: 14),
+        child: Container(
+      decoration: BoxDecoration(
+          border: Border.all(color: Theme.of(context).primaryColor),
+          borderRadius: const BorderRadius.all(Radius.circular(20))),
+      margin: const EdgeInsets.only(top: 5, left: 10, right: 10, bottom: 14),
       child: Padding(
         padding: const EdgeInsets.all(5),
         child: Column(
@@ -244,12 +252,17 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
     String? title,
     String? desc,
     String? deadline,
+    String? date,
   }) {
     return Expanded(
       child: TextButton(
         style: ButtonStyle(
+          shape: MaterialStateProperty.all(RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(20.0), // Adjust the radius as needed
+          )),
           padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-            const EdgeInsets.all(5),
+            const EdgeInsets.all(10),
           ),
         ),
         onPressed: () {
@@ -262,32 +275,64 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                   deadline: deadline)));
           debugPrint("$id");
         },
-        child: Card(
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 150),
+          decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).primaryColor),
+              borderRadius: const BorderRadius.all(Radius.circular(20))),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                  child: Row(children: [
+                    Icon(Icons.book,
+                        color: Theme.of(context).colorScheme.onSurface),
+                    Text(
+                      'Assignment',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                      ),
+                    )
+                  ]),
+                ),
+                Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      DateFormat('yyyy-MM-dd HH:mm').format(
+                        DateTime.fromMicrosecondsSinceEpoch(
+                          int.parse(
+                                RegExp(r'seconds=(\d+), nanoseconds=(\d+)')
+                                        .firstMatch(date ??
+                                            "Timestamp(seconds=0, nanoseconds=0)")!
+                                        .group(1)! +
+                                    RegExp(r'seconds=(\d+), nanoseconds=(\d+)')
+                                        .firstMatch(date ??
+                                            "Timestamp(seconds=0, nanoseconds=0)")!
+                                        .group(2)!,
+                              ) ~/
+                              1000,
+                        ),
+                      ),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    )),
+              ]),
               Container(
                 padding: const EdgeInsets.symmetric(
                   vertical: 5,
-                  horizontal: 10,
-                ),
-                child: const Text(
-                  'Assignment',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 5,
-                  horizontal: 10,
+                  horizontal: 15,
                 ),
                 child: Text(
                   title!,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontSize: 16,
                   ),
                 ),
@@ -297,7 +342,11 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                    child: Text(desc!),
+                    child: Text(
+                      desc!,
+                      style: const TextStyle(
+                          color: Colors.black, fontWeight: FontWeight.normal),
+                    ),
                   )),
               detailValue("Deadline", deadline!, context),
             ],
@@ -307,7 +356,7 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
     );
   }
 
-  Card announcement(
+  Widget announcement(
     BuildContext context, {
     String? date,
     String? desc,
@@ -315,7 +364,12 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
     dynamic list,
     String? teachId,
   }) {
-    return Card(
+    return Container(
+      constraints: const BoxConstraints(minHeight: 150),
+      margin: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          border: Border.all(color: Theme.of(context).primaryColor)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -330,7 +384,7 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                         padding: const EdgeInsets.symmetric(
                             vertical: 5, horizontal: 10),
                         child: Text(
-                          DateFormat('yyyy-MM-dd HH:mm:ss').format(
+                          DateFormat('yyyy-MM-dd').format(
                             DateTime.fromMicrosecondsSinceEpoch(
                               int.parse(
                                     RegExp(r'seconds=(\d+), nanoseconds=(\d+)')
@@ -390,7 +444,7 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
             Visibility(
               visible: list.isNotEmpty,
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 5),
+                margin: const EdgeInsets.symmetric(horizontal: 15),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -402,8 +456,16 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                     ),
                     for (final file in list)
                       TextButton(
-                        style: TextButton.styleFrom(
-                            padding: const EdgeInsets.all(1)),
+                        style: ButtonStyle(
+                          shape:
+                              MaterialStateProperty.all(RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          )),
+                          padding:
+                              MaterialStateProperty.all<EdgeInsetsGeometry>(
+                            const EdgeInsets.all(1),
+                          ),
+                        ),
                         onPressed: () async {
                           final url = await storeRef
                               .child("announcements/$id/$file")
@@ -527,22 +589,34 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
     }
   }
 
+  final wordButton = ButtonStyle(
+    shape: MaterialStateProperty.all(RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10.0), // Adjust the radius as needed
+    )),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: widget.details["subName"].length > 15 ? false : true,
         title: widget.type == "Teacher"
             ? Row(children: [
-                Text(widget.details["subName"]!),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 5),
-                  child: IconButton(
-                      onPressed: _copyToClipboard,
-                      icon: const Icon(Icons.share)),
-                )
+                Text(
+                  widget.details["subName"]!,
+                  style: TextStyle(
+                      fontSize: widget.details["subName"].length > 15
+                          ? 20 - widget.details["subName"].length + 13
+                          : 20),
+                ),
               ])
             : Text(widget.details["subName"]!),
         actions: [
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            child: IconButton(
+                onPressed: _copyToClipboard, icon: const Icon(Icons.share)),
+          ),
           iconContainer(GestureDetector(
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
@@ -591,6 +665,7 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                         deadline: actval["assignDlDate"] +
                             " " +
                             actval["assignDlTime"],
+                        date: actval["announceDate"],
                       )
                     : actval != null && actval['actType'] == 'announcement'
                         ? announcement(context,
@@ -605,67 +680,69 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                             teachId: widget.details['teacherId'])
                         : const SizedBox.shrink();
           }),
-      persistentFooterAlignment: AlignmentDirectional.center,
-      persistentFooterButtons: [
-        widget.type == "Teacher"
-            ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                buttonStyle(SizedBox(
-                  width: MediaQuery.of(context).size.width / 2.3,
-                  child: FilledButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => QRCodeScannerPage(
-                                id: widget.id, details: widget.details)));
-                      },
-                      child: const Text(
-                        "Start Session",
-                        style: TextStyle(fontSize: 16),
-                      )),
-                )),
-                buttonStyle(SizedBox(
-                  width: MediaQuery.of(context).size.width / 2.3,
-                  child: FilledButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => CreateActivity(
-                                subjectId: widget.id,
-                                details: widget.details,
-                                type: widget.type)));
-                      },
-                      child: const Text(
-                        "Create..",
-                        style: TextStyle(fontSize: 16),
-                      )),
-                ))
-              ])
-            : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                buttonStyle(SizedBox(
-                  width: MediaQuery.of(context).size.width / 2.3,
-                  child: FilledButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QrCodeScreen(id: widget.id),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        "Generate ID QR",
-                        style: TextStyle(fontSize: 16),
-                      )),
-                )),
-                buttonStyle(SizedBox(
-                  width: MediaQuery.of(context).size.width / 2.3,
-                  child: FilledButton(
-                      onPressed: () {},
-                      child: const Text(
-                        "Options",
-                        style: TextStyle(fontSize: 16),
-                      )),
-                ))
-              ])
-      ],
+      floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => CreateActivity(
+                    subjectId: widget.id,
+                    details: widget.details,
+                    type: widget.type)));
+          },
+          child: const Icon(Icons.add)),
+      bottomNavigationBar: BottomAppBar(
+          padding: EdgeInsets.zero,
+          height: 50,
+          child: Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                widget.type == "Teacher"
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                            TextButton(
+                                style: wordButton,
+                                onPressed: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (context) => QRCodeScannerPage(
+                                          id: widget.id,
+                                          details: widget.details)));
+                                },
+                                child: const Text(
+                                  "Start Session",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                )),
+                          ])
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                            Expanded(
+                              child: TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            QrCodeScreen(id: widget.id),
+                                      ),
+                                    );
+                                  },
+                                  child: const Column(children: [
+                                    Padding(
+                                        padding: EdgeInsets.all(2),
+                                        child: Icon(Icons.qr_code)),
+                                    Text(
+                                      "Generate ID QR",
+                                      style: TextStyle(fontSize: 16),
+                                    )
+                                  ])),
+                            ),
+                          ])
+              ],
+            ),
+          )),
     );
   }
 }

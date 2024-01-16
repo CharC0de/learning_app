@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -18,11 +19,65 @@ class QRCodeScannerPage extends StatefulWidget {
   State<QRCodeScannerPage> createState() => _QRCodeScannerPageState();
 }
 
+String sessionId = '';
+dynamic sessionDet = {};
+
 class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
+  var existSession = false;
+  void initialSession() {
+    dbRef
+        .child('sessions/')
+        .orderByChild('subjectId')
+        .equalTo(widget.id)
+        .onValue
+        .listen((event) {
+      setState(() {
+        sessionDet = event.snapshot.value;
+      });
+      debugPrint('sessionDet is null ${sessionDet != null}');
+    });
+  }
+
+  void createNewSession() {
+    setState(() {
+      sessionId = dbRef.push().key!;
+      existSession = true;
+    });
+
+    final sessionVal = {
+      "sessionDate": Timestamp.now().toString(),
+      'active': true,
+      'teacherId': userRef.currentUser!.uid,
+      'subjectId': widget.id,
+    };
+
+    dbRef.child('sessions/$sessionId/').set(sessionVal);
+  }
+
+  String admission = "Student does not exist";
+  void queryuser(scannedData) {
+    dbRef.child('users/$scannedData').onValue.listen((event) {
+      Map<dynamic, dynamic> users = {};
+      if (event.snapshot.value != null) {
+        users = (event.snapshot.value as Map<dynamic, dynamic>)
+            .cast<String, dynamic>();
+      }
+      if (users.isNotEmpty) {
+        if (users["type"] == 'Student') {
+          setState(() {
+            admission = 'Admit ${users["uName"]}?';
+          });
+          // Additional user data can be accessed here if needed
+        }
+      }
+    });
+  }
+
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   Barcode? result;
   late QRViewController controller;
   StreamSubscription? sessStream;
+
   final dbRef = FirebaseDatabase.instanceFor(
     app: Firebase.app(),
     databaseURL:
@@ -46,18 +101,42 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
         .equalTo(widget.id)
         .onValue
         .listen((event) {
-      if (event.snapshot.value != null) {
-        final sessions = (event.snapshot.value as Map<dynamic, dynamic>)
-            .cast<String, dynamic>();
+      if (context.mounted) {
+        debugPrint(widget.id);
+        if (event.snapshot.value != null) {
+          final sessions = (event.snapshot.value as Map<dynamic, dynamic>)
+              .cast<String, dynamic>();
+          debugPrint('trIgger1');
 
-        final filteredSessions = sessions.entries
-            .where((entry) => entry.value['active'] == true)
-            .toList();
-
-        if (filteredSessions.isNotEmpty &&
-            sessionId != filteredSessions.first.key) {
+          final filteredSessions = sessions.entries
+              .where((entry) => entry.value['active'] == true)
+              .toList();
+          debugPrint(filteredSessions.toString());
+          if (filteredSessions.isNotEmpty &&
+              sessionId != filteredSessions.first.key) {
+            debugPrint('trIgger2');
+            debugPrint(" wews ${filteredSessions.toString()}");
+            setState(() {
+              sessionId = filteredSessions.first.key;
+              existSession = true;
+            });
+            debugPrint(sessionId);
+            debugPrint(existSession.toString());
+          } else if (filteredSessions.isNotEmpty) {
+            debugPrint('trIgger4');
+            setState(() {
+              existSession = true;
+            });
+          } else if (filteredSessions.isEmpty) {
+            setState(() {
+              debugPrint('trIgger6');
+              existSession = false;
+            });
+          }
+        } else {
+          debugPrint('Trgger3');
           setState(() {
-            sessionId = filteredSessions.first.key;
+            existSession = false;
           });
         }
       }
@@ -101,21 +180,17 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
         ],
       ),
       persistentFooterAlignment: AlignmentDirectional.center,
-      persistentFooterButtons: [
-        FilledButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => AttendancePage(sessId: sessionId)));
-          },
-          child: const Text('Show Attendance'),
-        ),
-        FilledButton(
-            onPressed: () {
-              dbRef.child('sessions/$sessionId/active/').set(false);
-              Navigator.of(context).pop();
-            },
-            child: const Text('End Session'))
-      ],
+      persistentFooterButtons: existSession
+          ? [
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => AttendancePage(sessId: sessionId)));
+                },
+                child: const Text('Show Attendance'),
+              ),
+            ]
+          : null,
     );
   }
 
@@ -144,8 +219,9 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
 
       if (scanData.code != null) {
         await controller.pauseCamera();
+        queryuser(scanData.code);
 
-        Navigator.push(
+        /*Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ResultScreen(
@@ -154,7 +230,76 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
               details: widget.details,
             ),
           ),
-        );
+        );*/
+        if (context.mounted) {
+          await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  const Text(
+                    'Attendance Success',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    admission,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                FilledButton(
+                  onPressed: () async {
+                    debugPrint(sessionDet.toString());
+                    // Your 'Yes' button logic here
+                    if (sessionDet != null) {
+                      setState(() {
+                        sessionDet = (sessionDet as Map<dynamic, dynamic>)
+                            .cast<String, dynamic>();
+                      });
+                      final filteredSessions = sessionDet.entries
+                          .where((entry) => entry.value['active'] == true)
+                          .toList();
+                      debugPrint(filteredSessions.toString());
+                      if (filteredSessions.isNotEmpty) {
+                        setState(() {
+                          sessionId = filteredSessions.first.key;
+                        });
+                        debugPrint('session id0: ${sessionId.toString()}');
+                      } else {
+                        createNewSession();
+                        debugPrint(
+                            'session id1: ${sessionId.toString()} $existSession');
+                      }
+                    } else {
+                      createNewSession();
+                      debugPrint(
+                          'session id2: ${sessionId.toString()} $existSession');
+                    }
+                    debugPrint('sessions/$sessionId/students/${scanData.code}');
+                    await dbRef
+                        .child('sessions/$sessionId/students/${scanData.code}')
+                        .set(true);
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: const Text("Yes", textAlign: TextAlign.center),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    // Your 'No' button logic here
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("No", textAlign: TextAlign.center),
+                ),
+              ],
+            ),
+          );
+        }
       }
       resumeCamera();
       debugPrint('Scanned QR Code: ${scanData.code}');
@@ -165,10 +310,11 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
   }
 
   @override
-  void dispose() {
+  void deactivate() {
     if (sessStream != null) {
       sessStream!.cancel();
     }
-    super.dispose();
+
+    super.deactivate();
   }
 }

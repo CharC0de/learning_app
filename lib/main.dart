@@ -33,7 +33,23 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      theme: ThemeData(useMaterial3: false),
+      theme: ThemeData(
+          bottomAppBarTheme: BottomAppBarTheme(
+              color: Colors.blue[700], surfaceTintColor: Colors.white),
+          floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              shape: CircleBorder(),
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white),
+          tabBarTheme: const TabBarTheme(
+              unselectedLabelColor: Colors.black, labelColor: Colors.white),
+          dividerTheme: const DividerThemeData(
+            color: Colors.transparent,
+          ),
+          appBarTheme: AppBarTheme(
+              centerTitle: true,
+              color: Colors.blue[700],
+              foregroundColor: Colors.white),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue)),
       home: const Login(),
     );
   }
