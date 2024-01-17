@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../utilities/util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import "../main.dart";
+import '../main.dart';
 
 class ChangePass extends StatefulWidget {
-  const ChangePass({super.key});
+  const ChangePass({Key? key});
   @override
   State<ChangePass> createState() => _ChangePassState();
 }
@@ -32,13 +32,16 @@ class _ChangePassState extends State<ChangePass> {
   }
 
   Container buttonStyle(Widget widget) => Container(
-      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 18),
-      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 18),
+        child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 18),
           child: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: 50,
-              child: widget)));
+            width: MediaQuery.of(context).size.width,
+            height: 50,
+            child: widget,
+          ),
+        ),
+      );
 
   InputDecoration inpDecoration(String identifier, IconData? icon) =>
       InputDecoration(
@@ -48,92 +51,184 @@ class _ChangePassState extends State<ChangePass> {
         ),
         hintText: identifier,
         labelText: identifier,
+        contentPadding: EdgeInsets.zero, // Remove padding inside the TextField
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.transparent,
+          ),
+        ),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.transparent,
+          ),
+        ),
+      );
+
+  BoxDecoration emailDecoration() => BoxDecoration(
+        shape: BoxShape.rectangle,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(width: 3, color: Color(0xFF004B73)),
       );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF004B73),
       appBar: AppBar(
-        title: const Text("Change Password"),
+        backgroundColor: Color(0xFF004B73),
+        title: const Text("Forgot Password", style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Center(
         child: SingleChildScrollView(
-            child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    inpContainer(TextFormField(
-                      decoration: inpDecoration("Email", Icons.email),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Enter your email";
-                        } else if (!isEmailValidated(value)) {
-                          return "Invalid Email";
-                        }
-                        return null;
-                      },
-                      onSaved: (value) {
-                        email = value;
-                      },
-                      keyboardType: TextInputType.emailAddress,
-                    )),
-                    buttonStyle(FilledButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            _formKey.currentState!.save();
-                          }
-                          resetPassword(email!);
-                          if (success) {
-                            showDialog<String>(
-                                barrierDismissible: false,
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                      title: const Text("Email Sent"),
-                                      content: Text(
-                                        "Password Change email has been Sent to $email",
+          child: Column(
+            children: [
+              SizedBox(height: 20), // Add spacing between logo and text
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: NetworkImage("images/Logo.png"),
+                    fit: BoxFit.fill,
+                  ),
+                ),
+              ),
+              SizedBox(height: 20), // Add spacing between text and email TextFormField
+              Text(
+                "Change your Password",
+                style: TextStyle(
+                  color: Colors.white, // Set text color to white
+                  fontSize: 18,
+                ),
+              ),
+              SizedBox(height: 20), // Add more spacing
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16), // Add padding to the sides
+                child: Container(
+                  width: 331,
+                  height: 218,
+                  decoration: ShapeDecoration(
+                    color: Color(0xFFAEC5D1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center, // Center the content
+                    children: [
+                      Container(
+                        width: 250, // Adjusted the width
+                        height: 51.57,
+                        decoration: emailDecoration(),
+                        child: TextFormField(
+                          decoration: inpDecoration("Email", Icons.email),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Enter your email";
+                            } else if (!isEmailValidated(value)) {
+                              return "Invalid Email";
+                            }
+                            return null;
+                          },
+                          onSaved: (value) {
+                            email = value;
+                          },
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                      ),
+                      SizedBox(height: 20), // Add spacing between email and button
+                      buttonStyle(
+                        Container(
+                          width: 271.59,
+                          height: 41.65,
+                          decoration: ShapeDecoration(
+                            color: Color(0xFF006497),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            shadows: [
+                              BoxShadow(
+                                color: Color(0x3F000000),
+                                blurRadius: 4,
+                                offset: Offset(0, 4),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: FilledButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                _formKey.currentState!.save();
+                              }
+                              resetPassword(email!);
+                              if (success) {
+                                showDialog<String>(
+                                  barrierDismissible: false,
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text("Email Sent"),
+                                    content: Text(
+                                      "Password Change email has been Sent to $email",
+                                    ),
+                                    actions: [
+                                      FilledButton(
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) => const Login(),
+                                            ),
+                                          );
+                                        },
+                                        child: const Text(
+                                          "Ok",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
                                       ),
-                                      actions: [
-                                        FilledButton(
-                                            onPressed: () {
-                                              Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const Login()));
-                                            },
-                                            child: const Text(
-                                              "Ok",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w500),
-                                            ))
-                                      ],
-                                    ));
-                          } else {
-                            showDialog<String>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                      title: const Text("Error"),
-                                      content: const Text(
-                                          "Email was not sent please check your internet connection and try again."),
-                                      actions: [
-                                        FilledButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text(
-                                              "Ok",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w500),
-                                            )),
-                                      ],
-                                    ));
-                          }
-                        },
-                        child: const Text(
-                          "Send Email",
-                          style: TextStyle(fontSize: 22),
-                        )))
-                  ],
-                ))),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                showDialog<String>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text("Error"),
+                                    content: const Text(
+                                      "Email was not sent. Please check your internet connection and try again.",
+                                    ),
+                                    actions: [
+                                      FilledButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text(
+                                          "Ok",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Text(
+                              "Send Email",
+                              style: TextStyle(fontSize: 22),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
