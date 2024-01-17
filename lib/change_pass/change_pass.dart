@@ -83,27 +83,27 @@ class _ChangePassState extends State<ChangePass> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 40), // Increased the spacing between logo and text
               Image.asset(
                 'images/Logo.png',
                 fit: BoxFit.cover,
                 width: 150,
                 height: 150,
               ),
-              SizedBox(height: 20), // Add spacing between text and email TextFormField
+              SizedBox(height: 30), // Add spacing between text and email TextFormField
               Text(
                 "Change your Password",
                 style: TextStyle(
                   color: Colors.white, // Set text color to white
-                  fontSize: 18,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold
                 ),
               ),
-              SizedBox(height: 20), // Add more spacing
+              SizedBox(height: 40), // Add more spacing
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16), // Add padding to the sides
+                padding: const EdgeInsets.symmetric(horizontal: 12), // Add padding to the sides
                 child: Container(
-                  width: 331,
-                  height: 218,
+                  width: 315,
+                  height: 205,
                   decoration: ShapeDecoration(
                     color: Color(0xFFAEC5D1),
                     shape: RoundedRectangleBorder(
@@ -213,7 +213,7 @@ class _ChangePassState extends State<ChangePass> {
                             },
                             child: const Text(
                               "Send Email",
-                              style: TextStyle(fontSize: 22),
+                              style: TextStyle(fontSize: 20),
                             ),
                           ),
                         ),
