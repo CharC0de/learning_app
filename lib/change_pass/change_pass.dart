@@ -83,16 +83,12 @@ class _ChangePassState extends State<ChangePass> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 20), // Add spacing between logo and text
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage("images/Logo.png"),
-                    fit: BoxFit.fill,
-                  ),
-                ),
+              SizedBox(height: 40), // Increased the spacing between logo and text
+              Image.asset(
+                'images/Logo.png',
+                fit: BoxFit.cover,
+                width: 150,
+                height: 150,
               ),
               SizedBox(height: 20), // Add spacing between text and email TextFormField
               Text(
