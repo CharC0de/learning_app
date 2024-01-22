@@ -117,39 +117,101 @@ class _LoginState extends State<Login> {
   }
 
   AlertDialog chooseRegPopup(BuildContext context) => AlertDialog(
-        actionsAlignment: MainAxisAlignment.center,
+    backgroundColor: const Color(0xFF004B73),
+    actionsAlignment: MainAxisAlignment.center,
         title: Expanded(
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-              const Text("Register"),
+              const Text("",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
               GestureDetector(
                   onTap: () => Navigator.pop(context, 'exit'),
                   child: Icon(Icons.cancel_rounded,
-                      color: Theme.of(context).colorScheme.primary))
-            ])),
-        content: const Text("Would you like to Register as"),
+                      color: Theme.of(context).colorScheme.primary)
+              )
+                ]
+            )
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Image.asset(
+                'images/Logo.png',
+                fit: BoxFit.cover,
+                width: 100,
+                height: 100,
+              ),
+            ),
+            const Text("Select an Account Type",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 19,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const Text("Choose an Account Type",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        contentPadding: const EdgeInsets.all(20),
         actions: [
-          FilledButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const UserRegistration(type: "Student")));
-            },
-            child: const Text('Student'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const UserRegistration(type: "Teacher")));
-            },
-            child: const Text('Teacher'),
-          ),
+          Container(
+           padding: const EdgeInsets.all(20),
+           decoration: BoxDecoration(
+             color: const Color(0xFFAEC5D1),
+             borderRadius: BorderRadius.circular(10.0),
+           ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FilledButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                        const Color(0xFF004B73)
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                            const UserRegistration(type: "Student")));
+                  },
+                  child: const Text('Sign Up as Student'),
+                ),
+                FilledButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                        const Color(0xFF004B73)
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                            const UserRegistration(type: "Teacher")));
+
+                  },
+                  child: const Text('Sign Up as Teacher'),
+                ),
+              ],
+            ),
+          )
         ],
       );
 
@@ -160,6 +222,7 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF004B73),
       body: Center(
           child: SingleChildScrollView(
         child: Column(
@@ -169,12 +232,36 @@ class _LoginState extends State<Login> {
               child: Image.asset(
                 'images/Logo.png',
                 fit: BoxFit.cover,
-                width: 200,
-                height: 200,
+                width: 100,
+                height: 100,
               ),
             ),
+            const SizedBox(
+              height: 8,
+            ),
+            const Text( "Welcome Back!",
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Roboto',
+                color: Colors.white,
+              ),
+            ),
+            const Text( "Login to your EduQ account.",
+              style: TextStyle(
+                fontSize: 20,
+                fontFamily: 'Roboto',
+                color: Colors.white,
+              ),
+            ),
+
             Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFAEC5D1),
+                borderRadius: BorderRadius.circular(10.0),
+              ),
               margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.only(top: 10),
               child: Column(
                 children: [
                   Form(
@@ -241,7 +328,7 @@ class _LoginState extends State<Login> {
                             style: const TextStyle(color: Colors.red),
                           ),
                           Align(
-                              alignment: Alignment.centerRight,
+                              alignment: Alignment.center,
                               child: TextButton(
                                   onPressed: () => Navigator.of(context).push(
                                       MaterialPageRoute(
@@ -249,7 +336,9 @@ class _LoginState extends State<Login> {
                                               const ChangePass())),
                                   child: const Text("Forgot Password?"))),
                           butContainer(FilledButton(
-                              style: loginButtonStyle,
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(const Color(0xFF006497)),
+                              ),
                               onPressed: () {
                                 if (loginKey.currentState!.validate()) {
                                   loginKey.currentState!.save();
@@ -262,12 +351,34 @@ class _LoginState extends State<Login> {
                               child: const Text("Login")))
                         ],
                       )),
-                  butContainer(FilledButton(
-                      style: loginButtonStyle,
+                  Align(
+                    alignment: Alignment.center,
+                    child: TextButton(
                       onPressed: () => showDialog<String>(
-                          context: context,
-                          builder: (context) => chooseRegPopup(context)),
-                      child: const Text("Register"))),
+                        context: context,
+                        builder: (context) => chooseRegPopup(context),
+                      ),
+                      child: RichText(
+                        text: const TextSpan(
+                          text: "Don't have an account? ",
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.normal,
+                            color: Colors.black
+                          ),
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Sign Up',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             )

@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../main.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'alert_dialog_logout.dart';
 import 'profile/user_profile.dart';
 import '../register/create_subs/create_sub_act.dart';
 import '../qr/qr_scanner.dart';
@@ -553,14 +554,19 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                 builder: (context, snapshot) => assetBuilder(context, snapshot),
               ))),
           IconButton(
-            onPressed: () {
-              FirebaseAuth.instance.signOut();
-              Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (context) => const Login()));
-            },
-            icon: const Icon(Icons.logout_outlined),
+            onPressed: () async {
+            //   FirebaseAuth.instance.signOut();
+            //   Navigator.of(context)
+            //       .push(MaterialPageRoute(builder: (context) => const Login()));
+            // },
+            // icon: const Icon(Icons.logout_outlined),
+            final action = await AlertDialogs.yesCancelDialog(
+            context, 'Logout', 'Are you sure?'
+            );
+          },
+           icon: const Icon(Icons.logout_outlined)
           )
-        ],
+        ]
       ),
       body: ListView.builder(
           itemCount: actData.length + 1,
@@ -652,7 +658,7 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                       },
                       child: const Text(
                         "Generate ID QR",
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(fontSize: 15),
                       )),
                 )),
                 buttonStyle(SizedBox(
@@ -661,7 +667,7 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                       onPressed: () {},
                       child: const Text(
                         "Options",
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(fontSize: 15),
                       )),
                 ))
               ])

@@ -80,7 +80,7 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan for Attendance'),
+        title: const Text('Attendance'),
       ),
       body: Column(
         children: <Widget>[
@@ -100,9 +100,12 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
           ),
         ],
       ),
-      persistentFooterAlignment: AlignmentDirectional.center,
+      persistentFooterAlignment: AlignmentDirectional.topCenter,
       persistentFooterButtons: [
         FilledButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(const Color(0xFF006497)),
+          ),
           onPressed: () {
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => AttendancePage(sessId: sessionId)));
@@ -110,6 +113,9 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
           child: const Text('Show Attendance'),
         ),
         FilledButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(const Color(0xFF006497)),
+          ),
             onPressed: () {
               dbRef.child('sessions/$sessionId/active/').set(false);
               Navigator.of(context).pop();

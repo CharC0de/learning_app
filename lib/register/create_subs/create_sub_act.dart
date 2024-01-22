@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:learning_app/dashboard/dashboard.dart';
 import 'package:learning_app/dashboard/subject_dashboard.dart';
 import 'package:learning_app/utilities/util.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -279,11 +280,15 @@ class _CreateActivityState extends State<CreateActivity>
                         }
 
                         debugPrint(announceForm.toString());
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => SubjectDashboard(
-                                details: widget.details!,
-                                id: widget.subjectId,
-                                type: widget.type)));
+                       //  Navigator.of(context).push(MaterialPageRoute(
+                       //      builder: (context) => SubjectDashboard(
+                       //          details: widget.details!,
+                       //          id: widget.subjectId,
+                       //          type: widget.type)
+                       //  )
+                       // );
+                        Navigator.pop(context);
+
                       },
                       child: const Text(
                         'Submit',
