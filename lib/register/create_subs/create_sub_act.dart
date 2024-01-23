@@ -57,7 +57,7 @@ class _CreateActivityState extends State<CreateActivity>
 
   Map<String, dynamic> assignForm = {
     "assignDesc": "",
-    "announceDate": Timestamp.now().toDate(),
+    "announceDate": Timestamp.now().toString(),
     "assignDlDate": "",
     "assignDlTime": "",
     "actType": "assignment",
@@ -283,11 +283,7 @@ class _CreateActivityState extends State<CreateActivity>
                         }
 
                         debugPrint(announceForm.toString());
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => SubjectDashboard(
-                                details: widget.details!,
-                                id: widget.subjectId,
-                                type: widget.type)));
+                        Navigator.of(context).pop();
                       },
                       child: const Text(
                         'Submit',

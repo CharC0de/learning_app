@@ -401,7 +401,7 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                           ),
                           style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: 10,
+                              fontSize: 15,
                               color: Theme.of(context).colorScheme.primary),
                         ),
                       )
@@ -551,9 +551,21 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                 ),
               )),
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 5),
-            child: Text(uname),
-          ),
+              margin: const EdgeInsets.symmetric(horizontal: 5),
+              child: Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    child: Text(uname),
+                  ),
+                  Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 5),
+                      child: const Text(
+                        'Teacher',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      )),
+                ],
+              )),
         ]);
       } else {
         return Row(
@@ -562,10 +574,17 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
               Icons.account_circle,
               size: 35,
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 5),
-              child: Text(uname),
-            ),
+            Column(
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                  child: Text(uname),
+                ),
+                Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    child: const Text('Teacher')),
+              ],
+            )
           ],
         );
       }
@@ -680,18 +699,20 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                             teachId: widget.details['teacherId'])
                         : const SizedBox.shrink();
           }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => CreateActivity(
-                    subjectId: widget.id,
-                    details: widget.details,
-                    type: widget.type)));
-          },
-          child: const Icon(Icons.add)),
+      floatingActionButton: widget.type == "Teacher"
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => CreateActivity(
+                        subjectId: widget.id,
+                        details: widget.details,
+                        type: widget.type)));
+              },
+              child: const Icon(Icons.add))
+          : null,
       bottomNavigationBar: BottomAppBar(
           padding: EdgeInsets.zero,
-          height: 50,
+          height: widget.type == "Teacher" ? 50 : 70,
           child: Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -732,10 +753,14 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                                   child: const Column(children: [
                                     Padding(
                                         padding: EdgeInsets.all(2),
-                                        child: Icon(Icons.qr_code)),
+                                        child: Icon(
+                                          Icons.qr_code,
+                                          color: Colors.white,
+                                        )),
                                     Text(
                                       "Generate ID QR",
-                                      style: TextStyle(fontSize: 16),
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 16),
                                     )
                                   ])),
                             ),

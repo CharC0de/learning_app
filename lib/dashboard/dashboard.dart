@@ -435,8 +435,8 @@ class _DashBoardState extends State<DashBoard> {
     }
   }
 
-  Widget hasSubs(items) {
-    return items != null
+  Widget hasSubs(Map<dynamic, dynamic> items) {
+    return items.isNotEmpty
         ? ListView.builder(
             itemCount: items.length,
             itemBuilder: (context, index) {
@@ -472,7 +472,7 @@ class _DashBoardState extends State<DashBoard> {
         title: const Text("Subjects"),
       ),
       body: hasSubs(item),
-      floatingActionButton: editIcon(),
+      floatingActionButton: widget.type == "Teacher" ? editIcon() : null,
       bottomNavigationBar: BottomAppBar(
           height: 60,
           color: Theme.of(context).appBarTheme.backgroundColor,
@@ -497,11 +497,16 @@ class _DashBoardState extends State<DashBoard> {
                             MaterialPageRoute(
                                 builder: (context) => const CreateSubject())),
                         icon: const Icon(Icons.add)))
-                : IconButton(
-                    onPressed: () => showDialog<String>(
-                        context: context,
-                        builder: (context) => chooseSubPopup(context)),
-                    icon: const Icon(Icons.add)),
+                : Container(
+                    alignment: AlignmentDirectional.center,
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                        shape: BoxShape.circle),
+                    child: IconButton(
+                        onPressed: () => showDialog<String>(
+                            context: context,
+                            builder: (context) => chooseSubPopup(context)),
+                        icon: const Icon(Icons.add))),
             iconContainer(GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute(

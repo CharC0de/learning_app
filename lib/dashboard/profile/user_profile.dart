@@ -229,15 +229,17 @@ class _UserProfile extends State<UserProfile> {
         )),
       ),
       persistentFooterAlignment: AlignmentDirectional.center,
-      persistentFooterButtons: [
-        FilledButton(
-          onPressed: () {
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SessionData()));
-          },
-          child: const Text('Sessions'),
-        )
-      ],
+      persistentFooterButtons: userData["type"] == "Teacher"
+          ? [
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => const SessionData()));
+                },
+                child: const Text('Sessions'),
+              )
+            ]
+          : null,
     );
   }
 

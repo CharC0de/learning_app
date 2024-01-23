@@ -30,10 +30,29 @@ class _AssignmentFormState extends State<AssignmentForm> {
   @override
   void initState() {
     getResponse();
+    getPass();
     super.initState();
   }
 
   StreamSubscription? respStream;
+  StreamSubscription? passStream;
+  bool passed = false;
+  getPass() {
+    passStream = dbref
+        .child(
+            '/subject_acts/${widget.id}/responses/${userRef.currentUser!.uid}')
+        .onValue
+        .listen((event) {
+      if (event.snapshot.value != null) {
+        if (context.mounted) {
+          setState(() {
+            passed = true;
+          });
+        }
+      }
+    });
+  }
+
   TextEditingController commentController = TextEditingController();
   final inpFormKey = GlobalKey<FormState>();
   Map<String, dynamic> inpForm = {
@@ -188,16 +207,27 @@ class _AssignmentFormState extends State<AssignmentForm> {
                 FutureBuilder(
                     future: getStudPfp(studId!), builder: assetBuilder),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  child: Text(
-                    date!,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                        color: Theme.of(context).colorScheme.primary),
-                  ),
-                )
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                    child: Row(children: [
+                      Text(
+                        date!,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.primary),
+                      ),
+                      Visibility(
+                          visible: DateTime.parse(date).isAfter(
+                              DateFormat('yyyy-M-d h:mm a')
+                                  .parse(widget.deadline)),
+                          child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              child: Text(
+                                'Late',
+                                style: TextStyle(color: Colors.red),
+                              )))
+                    ]))
               ]),
           Padding(
             padding: const EdgeInsets.all(5),
@@ -362,29 +392,36 @@ class _AssignmentFormState extends State<AssignmentForm> {
                           )),
                       const SizedBox(height: 30.0),
                       ElevatedButton(
-                        onPressed: () {
-                          if (commentController.text == "" &&
-                              selectedFiles.isEmpty) {
-                            setState(() {
-                              error = "cannot send an empty assignment";
-                              hasError = true;
-                            });
-                          } else {
-                            inpFormKey.currentState!.save();
-                            dbref
-                                .child(
-                                    'subject_acts/${widget.id}/responses/${userRef.currentUser!.uid}/')
-                                .set(inpForm);
-                            uploadFiles(widget.id);
-                            setState(() {
-                              hasSubmitted = true;
-                              success = "Submission success";
-                            });
-                          }
-                        },
-                        child: const Text(
-                          "Submit Assignment",
-                          style: TextStyle(
+                        onPressed: passed
+                            ? () {
+                                if (commentController.text == "" &&
+                                    selectedFiles.isEmpty) {
+                                  setState(() {
+                                    error = "cannot send an empty assignment";
+                                    hasError = true;
+                                  });
+                                } else {
+                                  if (inpFormKey.currentState!.validate()) {
+                                    inpFormKey.currentState!.save();
+                                    commentController.clear();
+                                    inpForm["inpAttachList"] = [];
+
+                                    dbref
+                                        .child(
+                                            'subject_acts/${widget.id}/responses/${userRef.currentUser!.uid}/')
+                                        .set(inpForm);
+                                    uploadFiles(widget.id);
+                                    setState(() {
+                                      hasSubmitted = true;
+                                      success = "Submission success";
+                                    });
+                                  }
+                                }
+                              }
+                            : () {},
+                        child: Text(
+                          passed ? "Already Passed" : "Submit Assignment",
+                          style: const TextStyle(
                             fontSize: 18,
                           ),
                         ),
@@ -414,5 +451,12 @@ class _AssignmentFormState extends State<AssignmentForm> {
                 : const Center(
                     child: Text('No one Has Attended yet'),
                   ));
+  }
+
+  @override
+  void deactivate() {
+    passStream!.cancel();
+    respStream!.cancel();
+    super.deactivate();
   }
 }
