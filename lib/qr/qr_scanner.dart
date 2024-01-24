@@ -159,7 +159,7 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan for Attendance'),
+        title: const Text('Attendance'),
       ),
       body: Column(
         children: <Widget>[

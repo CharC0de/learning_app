@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../main.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'alert_dialog_logout.dart';
 import 'profile/user_profile.dart';
 import '../register/create_subs/create_sub_act.dart';
 import '../qr/qr_scanner.dart';
@@ -599,43 +600,46 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: widget.details["subName"].length > 15 ? false : true,
-        title: widget.type == "Teacher"
-            ? Row(children: [
-                Text(
-                  widget.details["subName"]!,
-                  style: TextStyle(
-                      fontSize: widget.details["subName"].length > 15
-                          ? 20 - widget.details["subName"].length + 13
-                          : 20),
-                ),
-              ])
-            : Text(widget.details["subName"]!),
-        actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-            child: IconButton(
-                onPressed: _copyToClipboard, icon: const Icon(Icons.share)),
-          ),
-          iconContainer(GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => const UserProfile()));
-              },
-              child: FutureBuilder<Widget>(
-                future: getPfp(),
-                builder: (context, snapshot) => assetBuilder(context, snapshot),
-              ))),
-          IconButton(
-            onPressed: () {
-              FirebaseAuth.instance.signOut();
-              Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (context) => const Login()));
-            },
-            icon: const Icon(Icons.logout_outlined),
-          )
-        ],
-      ),
+          centerTitle: widget.details["subName"].length > 15 ? false : true,
+          title: widget.type == "Teacher"
+              ? Row(children: [
+                  Text(
+                    widget.details["subName"]!,
+                    style: TextStyle(
+                        fontSize: widget.details["subName"].length > 15
+                            ? 20 - widget.details["subName"].length + 13
+                            : 20),
+                  ),
+                ])
+              : Text(widget.details["subName"]!),
+          actions: [
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              child: IconButton(
+                  onPressed: _copyToClipboard, icon: const Icon(Icons.share)),
+            ),
+            iconContainer(GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => const UserProfile()));
+                },
+                child: FutureBuilder<Widget>(
+                  future: getPfp(),
+                  builder: (context, snapshot) =>
+                      assetBuilder(context, snapshot),
+                ))),
+            IconButton(
+                onPressed: () async {
+                  //   FirebaseAuth.instance.signOut();
+                  //   Navigator.of(context)
+                  //       .push(MaterialPageRoute(builder: (context) => const Login()));
+                  // },
+                  // icon: const Icon(Icons.logout_outlined),
+                  final action = await AlertDialogs.yesCancelDialog(
+                      context, 'Logout', 'Are you sure?');
+                },
+                icon: const Icon(Icons.logout_outlined))
+          ]),
       body: ListView.builder(
           itemCount: actData.length + 1,
           itemBuilder: (context, index) {

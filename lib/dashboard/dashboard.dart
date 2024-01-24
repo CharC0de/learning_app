@@ -3,9 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
-import '../main.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:learning_app/main.dart';
+import 'alert_dialog_logout.dart';
 import 'profile/user_profile.dart';
 import '../register/create_subs/create_subject.dart';
 import 'subject_dashboard.dart';
