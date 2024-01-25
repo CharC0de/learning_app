@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/services.dart';
 import 'package:learning_app/main.dart';
 import 'alert_dialog_logout.dart';
 import 'profile/user_profile.dart';
@@ -123,6 +124,7 @@ class _DashBoardState extends State<DashBoard> {
           Icons.calendar_month,
           color: Theme.of(context).colorScheme.primary,
         ));
+    bool isSched = false;
     switch (type) {
       case "Start":
         type += " time";
@@ -130,6 +132,7 @@ class _DashBoardState extends State<DashBoard> {
         type += " time";
       default:
         icon;
+        isSched = true;
         break;
     }
 
@@ -142,17 +145,35 @@ class _DashBoardState extends State<DashBoard> {
                 type != "Start time" && type != "End time"
                     ? icon
                     : const SizedBox(),
-                Text.rich(TextSpan(children: [
-                  TextSpan(
-                    text: '$type: ',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 12),
-                  ),
-                  TextSpan(
-                      text: time,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface))
-                ]))
+                !writeMode || !isSched && writeMode
+                    ? Text.rich(TextSpan(children: [
+                        TextSpan(
+                          text: '$type: ',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 12),
+                        ),
+                        TextSpan(
+                            text: time,
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface))
+                      ]))
+                    : Padding(
+                        padding: const EdgeInsets.only(left: 5),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$type: ',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 12),
+                            ),
+                            Text(time,
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface))
+                          ],
+                        ))
               ],
             )
           ],
@@ -266,6 +287,7 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
+  final addSubController = TextEditingController();
   final addSubFormKey = GlobalKey<FormState>();
   String subAddVal = "";
   AlertDialog chooseSubPopup(BuildContext context) => AlertDialog(
@@ -287,34 +309,38 @@ class _DashBoardState extends State<DashBoard> {
               child: Column(
                 children: [
                   TextFormField(
+                    controller: addSubController,
                     decoration: const InputDecoration(
                         hintText: 'Subject ID', labelText: 'Subject ID'),
                     validator: (value) {
-                      String? message;
-                      dbRef
-                          .child('subjects/')
-                          .orderByChild("teacherId")
-                          .equalTo(userRef.currentUser!.uid)
-                          .onValue
-                          .listen((event) {
-                        if (event.snapshot.value == null) {
-                          message = "Subject does not exist";
-                        }
-                      });
-                      return message;
+                      return addSubController.text == ''
+                          ? "Subject Does Not exist"
+                          : null;
                     },
                     onSaved: (value) {
                       subAddVal = value!;
                     },
                   ),
                   FilledButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        var data = await dbRef
+                            .child('/subjects/${addSubController.text}')
+                            .get();
+                        if (data.value != null) {
+                          var formData = (data.value as Map<dynamic, dynamic>)
+                              .cast<String, dynamic>();
+
+                          debugPrint(formData.toString());
+                        } else {
+                          addSubController.text = '';
+                        }
                         if (addSubFormKey.currentState!.validate()) {
                           addSubFormKey.currentState!.save();
                           dbRef
                               .child(
                                   'subjects/$subAddVal/users/${userRef.currentUser!.uid}/')
                               .set(true);
+                          Navigator.of(context).pop();
                         }
                       },
                       child: const Text('submit'))
@@ -473,7 +499,7 @@ class _DashBoardState extends State<DashBoard> {
         title: const Text("Subjects"),
       ),
       body: hasSubs(item),
-      floatingActionButton: editIcon(),
+      floatingActionButton: widget.type == "Teacher" ? editIcon() : null,
       bottomNavigationBar: BottomAppBar(
           height: 60,
           color: Theme.of(context).appBarTheme.backgroundColor,
@@ -481,12 +507,11 @@ class _DashBoardState extends State<DashBoard> {
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             IconButton(
               color: white,
-              onPressed: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const Login()));
+              onPressed: () async {
+                await AlertDialogs.yesCancelDialog(
+                    context, "Logout", "Are you sure you want to Log out?");
               },
-              icon: const Icon(Icons.home_filled),
+              icon: const Icon(Icons.logout),
             ),
             widget.type == "Teacher"
                 ? Container(

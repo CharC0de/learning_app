@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:learning_app/qr/res_screen.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-
+import 'alert_dialog_logout.dart';
 import '../main.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -635,8 +635,8 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                   //       .push(MaterialPageRoute(builder: (context) => const Login()));
                   // },
                   // icon: const Icon(Icons.logout_outlined),
-                  final action = await AlertDialogs.yesCancelDialog(
-                      context, 'Logout', 'Are you sure?');
+                  await AlertDialogs.yesCancelDialog(
+                      context, 'Logout', 'Are you sure you want to Log out?');
                 },
                 icon: const Icon(Icons.logout_outlined))
           ]),
@@ -684,18 +684,20 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                             teachId: widget.details['teacherId'])
                         : const SizedBox.shrink();
           }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => CreateActivity(
-                    subjectId: widget.id,
-                    details: widget.details,
-                    type: widget.type)));
-          },
-          child: const Icon(Icons.add)),
+      floatingActionButton: widget.type == "Teacher"
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => CreateActivity(
+                        subjectId: widget.id,
+                        details: widget.details,
+                        type: widget.type)));
+              },
+              child: const Icon(Icons.add))
+          : null,
       bottomNavigationBar: BottomAppBar(
           padding: EdgeInsets.zero,
-          height: 50,
+          height: 70,
           child: Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -728,18 +730,23 @@ class _SubjectDashboardState extends State<SubjectDashboard> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            QrCodeScreen(id: widget.id),
+                                        builder: (context) => QrCodeScreen(
+                                            id: userRef.currentUser!.uid),
                                       ),
                                     );
                                   },
                                   child: const Column(children: [
                                     Padding(
-                                        padding: EdgeInsets.all(2),
-                                        child: Icon(Icons.qr_code)),
+                                      padding: EdgeInsets.all(2),
+                                      child: Icon(
+                                        Icons.qr_code,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                     Text(
                                       "Generate ID QR",
-                                      style: TextStyle(fontSize: 16),
+                                      style: TextStyle(
+                                          fontSize: 16, color: Colors.white),
                                     )
                                   ])),
                             ),

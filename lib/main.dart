@@ -97,25 +97,27 @@ class _LoginState extends State<Login> {
           if (event.snapshot.value != null) {
             final userData = (event.snapshot.value as Map<dynamic, dynamic>)
                 .cast<String, dynamic>();
-
+            Navigator.of(context).pop();
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => DashBoard(type: userData['type'])));
             debugPrint('$userData');
           } else {
-            // No user found with the specified UID
+            Navigator.of(context).pop();
             debugPrint("User not found");
           }
         }, onError: (error) {
-          // Handle errors during data retrieval
+          Navigator.of(context).pop();
           debugPrint('Error fetching user data: $error');
         });
         debugPrint('$type is the important');
       } else {
+        Navigator.of(context).pop();
         setState(() {
           error = "Invalid Credentials";
         });
       }
     } catch (e) {
+      Navigator.of(context).pop();
       debugPrint("Error while logging in: $e");
       setState(() {
         error = "Invalid Credentials";
@@ -133,13 +135,14 @@ class _LoginState extends State<Login> {
   }
 
   AlertDialog chooseRegPopup(BuildContext context) => AlertDialog(
-    backgroundColor: const Color(0xFF004B73),
-    actionsAlignment: MainAxisAlignment.center,
+        backgroundColor: const Color(0xFF004B73),
+        actionsAlignment: MainAxisAlignment.center,
         title: Expanded(
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-              const Text("",
+              const Text(
+                "",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -149,11 +152,8 @@ class _LoginState extends State<Login> {
               GestureDetector(
                   onTap: () => Navigator.pop(context, 'exit'),
                   child: Icon(Icons.cancel_rounded,
-                      color: Theme.of(context).colorScheme.primary)
-              )
-                ]
-            )
-        ),
+                      color: Theme.of(context).colorScheme.primary))
+            ])),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -166,7 +166,8 @@ class _LoginState extends State<Login> {
                 height: 100,
               ),
             ),
-            const Text("Select an Account Type",
+            const Text(
+              "Select an Account Type",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 19,
@@ -174,7 +175,8 @@ class _LoginState extends State<Login> {
               ),
               textAlign: TextAlign.center,
             ),
-            const Text("Choose an Account Type",
+            const Text(
+              "Choose an Account Type",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 13,
@@ -186,42 +188,39 @@ class _LoginState extends State<Login> {
         contentPadding: const EdgeInsets.all(20),
         actions: [
           Container(
-           padding: const EdgeInsets.all(20),
-           decoration: BoxDecoration(
-             color: const Color(0xFFAEC5D1),
-             borderRadius: BorderRadius.circular(10.0),
-           ),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFAEC5D1),
+              borderRadius: BorderRadius.circular(10.0),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 FilledButton(
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all<Color>(
-                        const Color(0xFF004B73)
-                    ),
+                        const Color(0xFF004B73)),
                   ),
                   onPressed: () {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) =>
-                            const UserRegistration(type: "Student")));
+                                const UserRegistration(type: "Student")));
                   },
                   child: const Text('Sign Up as Student'),
                 ),
                 FilledButton(
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all<Color>(
-                        const Color(0xFF004B73)
-                    ),
+                        const Color(0xFF004B73)),
                   ),
                   onPressed: () {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) =>
-                            const UserRegistration(type: "Teacher")));
-
+                                const UserRegistration(type: "Teacher")));
                   },
                   child: const Text('Sign Up as Teacher'),
                 ),
@@ -255,7 +254,8 @@ class _LoginState extends State<Login> {
             const SizedBox(
               height: 8,
             ),
-            const Text( "Welcome Back!",
+            const Text(
+              "Welcome Back!",
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.bold,
@@ -263,14 +263,14 @@ class _LoginState extends State<Login> {
                 color: Colors.white,
               ),
             ),
-            const Text( "Login to your EduQ account.",
+            const Text(
+              "Login to your EduQ account.",
               style: TextStyle(
                 fontSize: 20,
                 fontFamily: 'Roboto',
                 color: Colors.white,
               ),
             ),
-
             Container(
               decoration: BoxDecoration(
                 color: const Color(0xFFAEC5D1),
@@ -300,9 +300,7 @@ class _LoginState extends State<Login> {
                                   Icons.email,
                                 ),
                                 hintText: "email",
-                              )
-                          )
-                          ),
+                              ))),
                           inpContainer(TextFormField(
                             onSaved: (value) {
                               credentials["password"] = value;
@@ -332,13 +330,11 @@ class _LoginState extends State<Login> {
                                         : Icons.visibility_off,
                                     color:
                                         Theme.of(context).colorScheme.primary,
-                                  )
-                              ),
+                                  )),
                               hintText: "password",
                             ),
                             obscureText: hidePass,
-                          )
-                          ),
+                          )),
                           Text(
                             error,
                             style: const TextStyle(color: Colors.red),
@@ -353,10 +349,19 @@ class _LoginState extends State<Login> {
                                   child: const Text("Forgot Password?"))),
                           butContainer(FilledButton(
                               style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all<Color>(const Color(0xFF006497)),
+                                backgroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                        const Color(0xFF006497)),
                               ),
                               onPressed: () {
                                 if (loginKey.currentState!.validate()) {
+                                  showDialog(
+                                      context: context,
+                                      builder: (context) => const AlertDialog(
+                                            title: Center(
+                                                child:
+                                                    CircularProgressIndicator()),
+                                          ));
                                   loginKey.currentState!.save();
 
                                   loginUser(credentials['email'],
@@ -378,10 +383,9 @@ class _LoginState extends State<Login> {
                         text: const TextSpan(
                           text: "Don't have an account? ",
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black
-                          ),
+                              fontSize: 10,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.black),
                           children: <TextSpan>[
                             TextSpan(
                               text: 'Sign Up',

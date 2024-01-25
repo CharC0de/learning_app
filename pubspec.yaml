@@ -51,6 +51,7 @@ dependencies:
   flutter_downloader: ^1.11.4
   path_provider: ^2.1.1
   qr_flutter: ^4.1.0
+  flutter_launcher_icons: ^0.13.1
 
 dev_dependencies:
   flutter_test:
@@ -106,3 +107,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: "AppIcon"
+  image_path: "images/Logo.png"
+  remove_alpha_ios: true

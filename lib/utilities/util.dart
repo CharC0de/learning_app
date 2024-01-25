@@ -15,6 +15,11 @@ bool isEmailValidated(String email) {
   return validator.hasMatch(email);
 }
 
+bool isUsernameValidated(String username) {
+  RegExp validator = RegExp(r'(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$');
+  return validator.hasMatch(username);
+}
+
 String timestampGen(date, format) {
   return DateFormat(format).format(
     DateTime.fromMicrosecondsSinceEpoch(
@@ -29,4 +34,19 @@ String timestampGen(date, format) {
           1000,
     ),
   );
+}
+
+Widget loading(
+  context,
+  snapshot,
+) {
+  if (snapshot.connectionState == ConnectionState.waiting) {
+    return const AlertDialog(
+      title: CircularProgressIndicator(),
+    );
+  } else if (snapshot.hasError) {
+    return Text('Error: ${snapshot.error}');
+  } else {
+    return snapshot.data ?? const Text('Image not found');
+  }
 }

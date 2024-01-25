@@ -30,10 +30,31 @@ class _AssignmentFormState extends State<AssignmentForm> {
   @override
   void initState() {
     getResponse();
+    widget.type == 'Teacher' ? getPass() : null;
     super.initState();
   }
 
   StreamSubscription? respStream;
+  StreamSubscription? passStream;
+  Map<String, dynamic> passed = {};
+  getPass() {
+    passStream = dbref
+        .child(
+            '/subject_acts/${widget.id}/responses/${userRef.currentUser!.uid}')
+        .onValue
+        .listen((event) {
+      if (event.snapshot.value != null) {
+        if (context.mounted) {
+          var formData = (event.snapshot.value as Map<dynamic, dynamic>)
+              .cast<String, dynamic>();
+          setState(() {
+            passed = formData;
+          });
+        }
+      }
+    });
+  }
+
   TextEditingController commentController = TextEditingController();
   final inpFormKey = GlobalKey<FormState>();
   Map<String, dynamic> inpForm = {
@@ -80,8 +101,9 @@ class _AssignmentFormState extends State<AssignmentForm> {
         .onValue
         .listen((event) {
       if (event.snapshot.value != null) {
+        var formData = (event.snapshot.value as Map).cast<String, dynamic>();
         setState(() {
-          respoData = event.snapshot.value;
+          respoData = formData;
         });
       }
       debugPrint('$respoData');
@@ -174,77 +196,88 @@ class _AssignmentFormState extends State<AssignmentForm> {
     String? studId,
   }) {
     return Container(
-      margin: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-          borderRadius: const BorderRadius.all(Radius.circular(20)),
-          border: Border.all(color: Theme.of(context).primaryColor)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                FutureBuilder(
-                    future: getStudPfp(studId!), builder: assetBuilder),
-                Padding(
+        margin: const EdgeInsets.all(10),
+        child: Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    FutureBuilder(
+                        future: getStudPfp(studId!), builder: assetBuilder),
+                    Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 5, horizontal: 10),
+                        child: Row(children: [
+                          Text(
+                            date!,
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.primary),
+                          ),
+                          Visibility(
+                              visible: DateTime.parse(date).isAfter(
+                                  DateFormat('yyyy-MM-dd hh:mm a')
+                                      .parse(widget.deadline)),
+                              child: const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  child: Text(
+                                    'Late',
+                                    style: TextStyle(color: Colors.red),
+                                  )))
+                        ]))
+                  ]),
+              Padding(
+                padding: const EdgeInsets.all(5),
+                child: Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  child: Text(
-                    date!,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                        color: Theme.of(context).colorScheme.primary),
-                  ),
-                )
-              ]),
-          Padding(
-            padding: const EdgeInsets.all(5),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-              child: Text(comment ?? ""),
-            ),
-          ),
-          if (list != null)
-            Visibility(
-              visible: list.isNotEmpty,
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 15),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Attachments:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    for (final file in list)
-                      TextButton(
-                        style: TextButton.styleFrom(
-                            padding: const EdgeInsets.all(1)),
-                        onPressed: () async {
-                          final url = await FirebaseStorage.instance
-                              .ref()
-                              .child("assignments/${widget.id}/$studId/$file")
-                              .getDownloadURL();
-                          _launchURL(url);
-                        },
-                        child: Text(
-                          file,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                  ],
+                  child: Text(comment ?? ""),
                 ),
               ),
-            ),
-        ],
-      ),
-    );
+              if (list != null)
+                Visibility(
+                  visible: list.isNotEmpty,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Attachments:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        for (final file in list)
+                          TextButton(
+                            style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(1)),
+                            onPressed: () async {
+                              final url = await FirebaseStorage.instance
+                                  .ref()
+                                  .child(
+                                      "assignments/${widget.id}/$studId/$file")
+                                  .getDownloadURL();
+                              _launchURL(url);
+                            },
+                            child: Text(
+                              file,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ));
   }
 
   String success = '';
@@ -255,6 +288,8 @@ class _AssignmentFormState extends State<AssignmentForm> {
             title: Text(
           widget.title,
         )),
+        backgroundColor:
+            widget.type == 'Student' ? null : const Color(0xFF004B73),
         body: widget.type == 'Student'
             ? SingleChildScrollView(
                 child: Form(
@@ -362,29 +397,38 @@ class _AssignmentFormState extends State<AssignmentForm> {
                           )),
                       const SizedBox(height: 30.0),
                       ElevatedButton(
-                        onPressed: () {
-                          if (commentController.text == "" &&
-                              selectedFiles.isEmpty) {
-                            setState(() {
-                              error = "cannot send an empty assignment";
-                              hasError = true;
-                            });
-                          } else {
-                            inpFormKey.currentState!.save();
-                            dbref
-                                .child(
-                                    'subject_acts/${widget.id}/responses/${userRef.currentUser!.uid}/')
-                                .set(inpForm);
-                            uploadFiles(widget.id);
-                            setState(() {
-                              hasSubmitted = true;
-                              success = "Submission success";
-                            });
-                          }
-                        },
-                        child: const Text(
-                          "Submit Assignment",
-                          style: TextStyle(
+                        onPressed: passed.isEmpty
+                            ? () {
+                                if (commentController.text == "" &&
+                                    selectedFiles.isEmpty) {
+                                  setState(() {
+                                    error = "cannot send an empty assignment";
+                                    hasError = true;
+                                  });
+                                } else {
+                                  if (inpFormKey.currentState!.validate()) {
+                                    inpFormKey.currentState!.save();
+
+                                    debugPrint(
+                                        inpForm["inpAttachList"].toString());
+                                    uploadFiles(widget.id);
+
+                                    dbref
+                                        .child(
+                                            'subject_acts/${widget.id}/responses/${userRef.currentUser!.uid}/')
+                                        .set(inpForm);
+                                    inpForm["inpAttachList"] = [];
+                                    commentController.clear();
+                                    Navigator.of(context).pop();
+                                  }
+                                }
+                              }
+                            : () {},
+                        child: Text(
+                          passed.isNotEmpty
+                              ? "Already Passed"
+                              : "Submit Assignment",
+                          style: const TextStyle(
                             fontSize: 18,
                           ),
                         ),
@@ -414,5 +458,21 @@ class _AssignmentFormState extends State<AssignmentForm> {
                 : const Center(
                     child: Text('No one Has Attended yet'),
                   ));
+  }
+
+  @override
+  void deactivate() {
+    passStream?.cancel();
+
+    respStream?.cancel();
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    passStream?.cancel();
+
+    respStream?.cancel();
+    super.dispose();
   }
 }

@@ -1,19 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../utilities/server_util.dart';
 
 import '../main.dart';
 
-enum DialogsAction {
-  Yes,
-  Cancel
-}
+enum DialogsAction { Yes, Cancel }
 
 class AlertDialogs {
   static Future<DialogsAction> yesCancelDialog(
-      BuildContext context,
-      String title,
-      String body,
-      ) async {
+    BuildContext context,
+    String title,
+    String body,
+  ) async {
     final action = await showDialog<DialogsAction>(
       context: context,
       builder: (BuildContext context) {
@@ -27,22 +25,30 @@ class AlertDialogs {
                 Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => const Login()));
               },
-              child: const Text('Yes',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w700
-                ),
+              child: const Text(
+                'Yes',
+                style:
+                    TextStyle(color: Colors.blue, fontWeight: FontWeight.w700),
               ),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(DialogsAction.Cancel);
+              onPressed: () async {
+                showDialog(
+                    context: context,
+                    builder: (context) => const AlertDialog(
+                            title: Center(
+                          child: CircularProgressIndicator(),
+                        )));
+                await userRef.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => const Login()));
+                }
               },
-              child: const Text('Cancel',
+              child: const Text(
+                'Cancel',
                 style: TextStyle(
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.w700
-                ),
+                    color: Colors.redAccent, fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -50,6 +56,8 @@ class AlertDialogs {
       },
     );
 
-    return (action != null) ? action : DialogsAction.Cancel; // Default to Cancel if the dialog is dismissed
+    return (action != null)
+        ? action
+        : DialogsAction.Cancel; // Default to Cancel if the dialog is dismissed
   }
 }

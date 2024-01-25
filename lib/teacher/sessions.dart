@@ -16,12 +16,18 @@ class _SessionDataState extends State<SessionData> {
   @override
   initState() {
     getSessions();
+    getSubjects();
+
     super.initState();
   }
 
   StreamSubscription? sessionStream;
+  StreamSubscription? subjectStream;
   var sessData = {};
+  var subjectData = {};
+
   List<MapEntry<dynamic, dynamic>> list = [];
+  List<MapEntry<dynamic, dynamic>> subList = [];
   getSessions() {
     sessionStream = dbref
         .child('sessions')
@@ -36,6 +42,32 @@ class _SessionDataState extends State<SessionData> {
           list = sessData.entries
               .where((entry) => entry.value['active'] == false)
               .toList();
+          list.sort(
+            (a, b) {
+              var sessionDateA =
+                  timestampGen(a.value['sessionDate'], 'yyyy-MM-dd HH:mm:ss');
+              var sessionDateB =
+                  timestampGen(b.value['sessionDate'], 'yyyy-MM-dd HH:mm:ss');
+              return sessionDateB.compareTo(sessionDateA);
+            },
+          );
+        });
+      }
+    });
+  }
+
+  getSubjects() {
+    subjectStream = dbref
+        .child('subjects')
+        .orderByChild('teacherId')
+        .equalTo(userRef.currentUser!.uid)
+        .onValue
+        .listen((event) {
+      debugPrint(event.snapshot.value.toString());
+      if (event.snapshot.value != null) {
+        setState(() {
+          subjectData = (event.snapshot.value as Map<dynamic, dynamic>)
+              .cast<String, dynamic>();
         });
       }
     });
@@ -44,6 +76,7 @@ class _SessionDataState extends State<SessionData> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF004B73),
       appBar: AppBar(
         title: const Text('Sessions'),
       ),
@@ -52,25 +85,20 @@ class _SessionDataState extends State<SessionData> {
           itemBuilder: (context, int) {
             var id = list[int].key;
             var subjectId = list[int].value['subjectId'];
-            var subject = '';
+            var subject = subjectData.entries
+                .where((val) => val.key == subjectId)
+                .first
+                .value['subName'];
             var subData = {};
-            dbref.child('/subjects/$subjectId').once().then((e) {
-              if (e.snapshot.value != null) {
-                subData = (e.snapshot.value as Map<dynamic, dynamic>)
-                    .cast<String, dynamic>();
-                if (context.mounted) {
-                  setState(() {
-                    subject = subData['subName'];
-                  });
-                }
-
-                debugPrint(subject);
-              }
-            });
             var sessionDate = timestampGen(
                 list[int].value['sessionDate'], 'yyyy-MM-dd HH:mm:ss');
-            return ListTile(
-              title: TextButton(
+            return Card(
+              child: TextButton(
+                  style: ButtonStyle(
+                      shape: MaterialStateProperty.all(
+                          const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10))))),
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => AttendancePage(
@@ -88,6 +116,7 @@ class _SessionDataState extends State<SessionData> {
   @override
   void deactivate() {
     sessionStream!.cancel();
+    subjectStream!.cancel();
     super.deactivate();
   }
 }

@@ -1,289 +1,247 @@
-import 'dart:async';
-
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
-import 'register/register.dart';
-import 'change_pass/change_pass.dart';
-import 'utilities/util.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'dashboard/dashboard.dart';
-
+import '../utilities/util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../main.dart';
 
-Future main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  FlutterDownloader.initialize(
-    debug: true, // Enable debugging to see logs (optional)
-  );
-
-  runApp(const MyApp());
+class ChangePass extends StatefulWidget {
+  const ChangePass({super.key});
+  @override
+  State<ChangePass> createState() => _ChangePassState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _ChangePassState extends State<ChangePass> {
+  final _formKey = GlobalKey<FormState>();
+  final bool showPass = false;
+  String? email;
+  bool success = true;
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-          bottomAppBarTheme: BottomAppBarTheme(
-              color: Colors.blue[700], surfaceTintColor: Colors.white),
-          floatingActionButtonTheme: const FloatingActionButtonThemeData(
-              shape: CircleBorder(),
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white),
-          tabBarTheme: const TabBarTheme(
-              unselectedLabelColor: Colors.black, labelColor: Colors.white),
-          dividerTheme: const DividerThemeData(
-            color: Colors.transparent,
-          ),
-          appBarTheme: AppBarTheme(
-              centerTitle: true,
-              color: Colors.blue[700],
-              foregroundColor: Colors.white),
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue)),
-      home: const Login(),
-    );
-  }
-}
-
-class Login extends StatefulWidget {
-  const Login({super.key});
-  @override
-  State<Login> createState() => _LoginState();
-}
-
-class _LoginState extends State<Login> {
-  Map<String, dynamic> credentials = {
-    "email": "",
-    "password": "",
-  };
-  @override
-  void initState() {
-    FirebaseAuth.instance.signOut();
-    super.initState();
-  }
-
-  String type = "";
-
-  final dbRef = FirebaseDatabase.instanceFor(
-          app: Firebase.app(),
-          databaseURL:
-              "https://learning-app-c8a25-default-rtdb.asia-southeast1.firebasedatabase.app/")
-      .ref();
-
-  String error = "";
-  bool hidePass = true;
-  Future<void> loginUser(String email, String password, context) async {
+  void resetPassword(String email) async {
     try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      User? user = userCredential.user;
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
-      if (user != null) {
-        debugPrint("login success");
-        dbRef.child('users/${user.uid}').onValue.listen((event) {
-          if (event.snapshot.value != null) {
-            final userData = (event.snapshot.value as Map<dynamic, dynamic>)
-                .cast<String, dynamic>();
-
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => DashBoard(type: userData['type'])));
-            debugPrint('$userData');
-          } else {
-            // No user found with the specified UID
-            debugPrint("User not found");
-          }
-        }, onError: (error) {
-          // Handle errors during data retrieval
-          debugPrint('Error fetching user data: $error');
-        });
-        debugPrint('$type is the important');
-      } else {
-        setState(() {
-          error = "Invalid Credentials";
-        });
-      }
-    } catch (e) {
-      debugPrint("Error while logging in: $e");
+      debugPrint('Password reset email sent');
       setState(() {
-        error = "Invalid Credentials";
+        success = true;
+      });
+    } catch (e) {
+      debugPrint('Error sending password reset email: $e');
+      setState(() {
+        success = false;
       });
     }
   }
 
-  Container butContainer(Widget widget) {
-    return Container(
-        margin: const EdgeInsets.all(5),
-        child: SizedBox(
-            width: MediaQuery.of(context).size.width / 2,
-            height: 40,
-            child: widget));
-  }
-
-  AlertDialog chooseRegPopup(BuildContext context) => AlertDialog(
-        actionsAlignment: MainAxisAlignment.center,
-        title: Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-              const Text("Register"),
-              GestureDetector(
-                  onTap: () => Navigator.pop(context, 'exit'),
-                  child: Icon(Icons.cancel_rounded,
-                      color: Theme.of(context).colorScheme.primary))
-            ])),
-        content: const Text("Would you like to Register as"),
-        actions: [
-          FilledButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const UserRegistration(type: "Student")));
-            },
-            child: const Text('Student'),
+  Container buttonStyle(Widget widget) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 18),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 18),
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width,
+            height: 50,
+            child: widget,
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const UserRegistration(type: "Teacher")));
-            },
-            child: const Text('Teacher'),
-          ),
-        ],
+        ),
       );
 
-  ButtonStyle loginButtonStyle =
-      FilledButton.styleFrom(minimumSize: const Size(400, 50));
+  InputDecoration inpDecoration(String identifier, IconData? icon) =>
+      InputDecoration(
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        hintText: identifier,
+        labelText: identifier,
+        contentPadding: EdgeInsets.zero, // Remove padding inside the TextField
+        enabledBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.transparent,
+          ),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.transparent,
+          ),
+        ),
+      );
 
-  final loginKey = GlobalKey<FormState>();
+  BoxDecoration emailDecoration() => BoxDecoration(
+        shape: BoxShape.rectangle,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(width: 3, color: const Color(0xFF004B73)),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-          child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              child: Image.asset(
-                'images/Logo.png',
-                fit: BoxFit.cover,
-                width: 200,
-                height: 200,
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.all(20),
+        backgroundColor: const Color(0xFF004B73),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF004B73),
+          title: const Text("Forgot Password",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        body: Form(
+          key: _formKey,
+          child: Center(
+            child: SingleChildScrollView(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Form(
-                      key: loginKey,
+                  const SizedBox(
+                      height: 20), // Add spacing between logo and text
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage("images/Logo.png"),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                      height:
+                          20), // Add spacing between text and email TextFormField
+                  const Text(
+                    "Change your Password",
+                    style: TextStyle(
+                      color: Colors.white, // Set text color to white
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 20), // Add more spacing
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16), // Add padding to the sides
+                    child: Container(
+                      width: 331,
+                      height: 218,
+                      decoration: ShapeDecoration(
+                        color: const Color(0xFFAEC5D1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
                       child: Column(
+                        mainAxisAlignment:
+                            MainAxisAlignment.center, // Center the content
                         children: [
-                          inpContainer(TextFormField(
-                              onSaved: (value) {
-                                credentials["email"] = value;
-                              },
+                          Container(
+                            width: 300, // Adjusted the width
+                            height: 51.57,
+                            decoration: emailDecoration(),
+                            child: TextFormField(
+                              decoration: inpDecoration("Email", Icons.email),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Enter password';
+                                  return "Enter your email";
+                                } else if (!isEmailValidated(value)) {
+                                  return "Invalid Email";
                                 }
                                 return null;
                               },
-                              decoration: const InputDecoration(
-                                prefixIcon: Icon(
-                                  Icons.email,
-                                ),
-                                hintText: "email",
-                              ))),
-                          inpContainer(TextFormField(
-                            onSaved: (value) {
-                              credentials["password"] = value;
-                            },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Enter password';
-                              }
-                              return null;
-                            },
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.lock),
-                              suffixIcon: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      if (hidePass) {
-                                        hidePass = false;
-                                      } else {
-                                        hidePass = true;
-                                      }
-                                    });
-                                  },
-                                  child: Icon(
-                                    hidePass
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  )),
-                              hintText: "password",
-                            ),
-                            obscureText: hidePass,
-                          )),
-                          Text(
-                            error,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                          Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                  onPressed: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const ChangePass())),
-                                  child: const Text("Forgot Password?"))),
-                          butContainer(FilledButton(
-                              style: loginButtonStyle,
-                              onPressed: () {
-                                if (loginKey.currentState!.validate()) {
-                                  loginKey.currentState!.save();
-
-                                  loginUser(credentials['email'],
-                                      credentials["password"], context);
-                                }
-                                debugPrint(credentials.toString());
+                              onSaved: (value) {
+                                email = value;
                               },
-                              child: const Text("Login")))
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                          ),
+                          const SizedBox(
+                              height:
+                                  20), // Add spacing between email and button
+                          buttonStyle(
+                            Container(
+                              width: 150.59,
+                              height: 41.65,
+                              decoration: ShapeDecoration(
+                                color: const Color(0xFF006497),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                shadows: const [
+                                  BoxShadow(
+                                    color: Color(0x3F000000),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 4),
+                                    spreadRadius: 0,
+                                  ),
+                                ],
+                              ),
+                              child: FilledButton(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    _formKey.currentState!.save();
+                                  }
+                                  resetPassword(email!);
+                                  if (success) {
+                                    showDialog<String>(
+                                      barrierDismissible: false,
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text("Email Sent"),
+                                        content: Text(
+                                          "Password Change email has been Sent to $email",
+                                        ),
+                                        actions: [
+                                          FilledButton(
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const Login(),
+                                                ),
+                                              );
+                                            },
+                                            child: const Text(
+                                              "Ok",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } else {
+                                    showDialog<String>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text("Error"),
+                                        content: const Text(
+                                          "Email was not sent. Please check your internet connection and try again.",
+                                        ),
+                                        actions: [
+                                          FilledButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text(
+                                              "Ok",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: const Text(
+                                  "Send Email",
+                                  style: TextStyle(fontSize: 22),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
-                      )),
-                  butContainer(FilledButton(
-                      style: loginButtonStyle,
-                      onPressed: () => showDialog<String>(
-                          context: context,
-                          builder: (context) => chooseRegPopup(context)),
-                      child: const Text("Register"))),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            )
-          ],
-        ),
-      )),
-    );
+            ),
+          ),
+        ));
   }
 }

@@ -58,7 +58,7 @@ class _CreateActivityState extends State<CreateActivity>
 
   Map<String, dynamic> assignForm = {
     "assignDesc": "",
-    "announceDate": Timestamp.now().toDate(),
+    "announceDate": Timestamp.now().toString(),
     "assignDlDate": "",
     "assignDlTime": "",
     "actType": "assignment",
@@ -281,18 +281,17 @@ class _CreateActivityState extends State<CreateActivity>
                             debugPrint('Error saving data: $error');
                           });
                           uploadFiles(id!);
+                          Navigator.pop(context);
                         }
 
                         debugPrint(announceForm.toString());
-                       //  Navigator.of(context).push(MaterialPageRoute(
-                       //      builder: (context) => SubjectDashboard(
-                       //          details: widget.details!,
-                       //          id: widget.subjectId,
-                       //          type: widget.type)
-                       //  )
-                       // );
-                        Navigator.pop(context);
-
+                        //  Navigator.of(context).push(MaterialPageRoute(
+                        //      builder: (context) => SubjectDashboard(
+                        //          details: widget.details!,
+                        //          id: widget.subjectId,
+                        //          type: widget.type)
+                        //  )
+                        // );
                       },
                       child: const Text(
                         'Submit',
@@ -415,13 +414,9 @@ class _CreateActivityState extends State<CreateActivity>
                           }).catchError((error) {
                             debugPrint('Error saving data: $error');
                           });
+                          Navigator.of(context).pop();
                         }
                         debugPrint(assignForm.toString());
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => SubjectDashboard(
-                                details: widget.details!,
-                                id: widget.subjectId,
-                                type: widget.type)));
                       },
                       child: const Text(
                         'Submit',

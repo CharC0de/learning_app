@@ -30,6 +30,26 @@ class _UserRegistrationState extends State<UserRegistration> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  bool isUnameUnique = true;
+
+  Future<void> validateUname(username) async {
+    try {
+      DataSnapshot users = await dbRef.child('/users/').get();
+      var data = (users.value as Map<dynamic, dynamic>).cast<String, dynamic>();
+
+      var res = Map.fromEntries(
+          data.entries.where((val) => val.value['uName'] == username));
+      debugPrint(res.toString());
+      setState(() {
+        isUnameUnique = res.isEmpty;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   final storageRef = FirebaseStorage.instance;
@@ -138,7 +158,7 @@ class _UserRegistrationState extends State<UserRegistration> {
   }
 
   UserCredential? userCredential;
-  Future<void> registerUser(String email, String password) async {
+  Future<bool> registerUser(String email, String password) async {
     try {
       userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -146,10 +166,28 @@ class _UserRegistrationState extends State<UserRegistration> {
         password: password,
       );
       debugPrint(userCredential!.user!.uid);
+      return true;
     } catch (e) {
       debugPrint(e.toString());
-      rethrow;
+      if (e is FirebaseAuthException) {
+        if (context.mounted) {
+          showDialog(
+              context: context,
+              builder: (context) => e.code == 'email-already-in-use'
+                  ? const AlertDialog(
+                      title: Text('Email is Already in Use'),
+                      content: Text(
+                          'Email address is already in use. Please choose another one.'),
+                    )
+                  : const AlertDialog(
+                      title: Text('Error Has Occured'),
+                      content: Text('Please call the Administratot'),
+                    ));
+        }
+        return false;
+      }
     }
+    return true;
   }
 
   Future<void> saveUserData(String user, Map<String, dynamic> userData) async {
@@ -182,16 +220,42 @@ class _UserRegistrationState extends State<UserRegistration> {
       "type": userForm["type"],
     };
 
-    await registerUser(email, password);
-    saveUserData(userCredential!.user!.uid, userData);
-    if (userForm["pfp"] != null) {
-      debugPrint(userForm["pfp"] + "wews");
-      uploadImage(userCredential!.user!.uid, _image, userForm["pfp"]);
+    if (await registerUser(email, password)) {
+      try {
+        saveUserData(userCredential!.user!.uid, userData);
+        if (userForm["pfp"] != null) {
+          debugPrint(userForm["pfp"] + "wews");
+          uploadImage(userCredential!.user!.uid, _image, userForm["pfp"]);
+        }
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        debugPrint(e.toString());
+      } finally {
+        setState(() {
+          success = 'Register Success';
+          _formKey.currentState!.reset();
+          _passwordController.clear();
+          _confirmPasswordController.clear();
+          _emailController.clear();
+          _usernameController.clear();
+          debugPrint(userForm.toString());
+        });
+        if (context.mounted) {
+          AlertDialogRegister.showSuccessDialog(
+            context,
+            'Registered Successfully',
+            'You have successfully registered.',
+          );
+        }
+      }
     }
   }
 
   AlertDialog choosePfpPopup(BuildContext context) => AlertDialog(
         actionsAlignment: MainAxisAlignment.center,
+        actionsOverflowAlignment: OverflowBarAlignment.center,
         title: Expanded(
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -248,19 +312,32 @@ class _UserRegistrationState extends State<UserRegistration> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   if (_image != null)
-                    CircleAvatar(
-                      radius: 100,
-                      backgroundImage: FileImage(_image!, scale: 50),
-                    )
+                    TextButton(
+                        style: ButtonStyle(
+                            shape: MaterialStateProperty.all(
+                                const CircleBorder())),
+                        onPressed: () {
+                          setState(() {
+                            _image = null;
+                          });
+                        },
+                        child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: CircleAvatar(
+                              radius: 100,
+                              backgroundImage: FileImage(_image!, scale: 50),
+                            )))
                   else
-                    const Icon(Icons.account_circle,
-                        size: 100, color: Colors.grey),
+                    Icon(Icons.account_circle,
+                        size: 100,
+                        color: Theme.of(context).colorScheme.onSurface),
                   Container(
                     padding: const EdgeInsets.all(10),
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       children: [
                         TextFormField(
+                          controller: _usernameController,
                           decoration: InputDecoration(
                             labelText: 'Username',
                             filled: true,
@@ -278,6 +355,12 @@ class _UserRegistrationState extends State<UserRegistration> {
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Enter a Username';
+                            } else if (!isUsernameValidated(value)) {
+                              return 'Invalid Username';
+                            } else if (value.length < 4) {
+                              return 'Username should be at least 4 characters long';
+                            } else if (!isUnameUnique) {
+                              return 'Username is taken';
                             }
                             return null;
                           },
@@ -330,6 +413,7 @@ class _UserRegistrationState extends State<UserRegistration> {
                         ),
                         const SizedBox(height: 10),
                         TextFormField(
+                          controller: _emailController,
                           decoration: InputDecoration(
                             labelText: 'Email',
                             filled: true,
@@ -392,7 +476,6 @@ class _UserRegistrationState extends State<UserRegistration> {
                                   ? Icons.visibility
                                   : Icons.visibility_off),
                               onPressed: () {
-                                // Toggle the password visibility
                                 setState(() {
                                   _obscurePassword = !_obscurePassword;
                                 });
@@ -404,8 +487,6 @@ class _UserRegistrationState extends State<UserRegistration> {
                           onSaved: (newValue) {
                             userForm["password"] = newValue;
                             newValue = "";
-                            _passwordController.text = "";
-                            _confirmPasswordController.text = "";
                           },
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -432,7 +513,6 @@ class _UserRegistrationState extends State<UserRegistration> {
                                   ? Icons.visibility
                                   : Icons.visibility_off),
                               onPressed: () {
-                                // Toggle the confirm password visibility
                                 setState(() {
                                   _obscureConfirmPassword =
                                       !_obscureConfirmPassword;
@@ -475,23 +555,21 @@ class _UserRegistrationState extends State<UserRegistration> {
                               const Color(0xFF006497)),
                         ),
                         onPressed: () async {
+                          await validateUname(_usernameController.text);
                           if (_formKey.currentState!.validate()) {
+                            if (context.mounted) {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) => const AlertDialog(
+                                        title: Center(
+                                            child: CircularProgressIndicator()),
+                                      ));
+                            }
+
                             _formKey.currentState!.save();
                             registerUserWithProfile(userForm);
                             debugPrint(userForm.toString());
-                            setState(() {
-                              success = 'Register Success';
-                              _formKey.currentState!.reset();
-                              _passwordController.clear();
-                              _confirmPasswordController.clear();
-                              debugPrint(userForm.toString());
-                            });
                           }
-                          final action = AlertDialogRegister.showSuccessDialog(
-                            context,
-                            'Registered Successfully',
-                            'You have successfully registered.',
-                          );
                         },
                         child: const Text(
                           'Register',
