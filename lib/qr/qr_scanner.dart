@@ -54,20 +54,24 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
     dbRef.child('sessions/$sessionId/').set(sessionVal);
   }
 
-  String admission = "Student does not exist";
+  String admission = "";
   Future<void> queryuser(scannedData) async {
-    var data = await dbRef.child('users/$scannedData').get();
-    if (data.value != null) {
-      var users = (data.value as Map).cast<String, dynamic>();
-      debugPrint('User DETECTED: ${users.toString()}');
-      if (context.mounted) {
-        if (users["type"] == 'Student') {
-          setState(() {
-            admission = 'Admit ${users["uName"]}?';
-          });
-          // Additional user data can be accessed here if needed
+    try {
+      var data = await dbRef.child('users/$scannedData').get();
+      if (data.value != null) {
+        var users = (data.value as Map).cast<String, dynamic>();
+        debugPrint('User DETECTED: ${users.toString()}');
+        if (context.mounted) {
+          if (users["type"] == 'Student') {
+            setState(() {
+              admission = 'Admit ${users["uName"]}?';
+            });
+            // Additional user data can be accessed here if needed
+          }
         }
       }
+    } catch (e) {
+      admission = "Student does not exist";
     }
   }
 

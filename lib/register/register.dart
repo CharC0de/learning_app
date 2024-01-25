@@ -171,6 +171,7 @@ class _UserRegistrationState extends State<UserRegistration> {
       debugPrint(e.toString());
       if (e is FirebaseAuthException) {
         if (context.mounted) {
+          Navigator.of(context).pop();
           showDialog(
               context: context,
               builder: (context) => e.code == 'email-already-in-use'

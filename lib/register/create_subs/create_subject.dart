@@ -339,6 +339,7 @@ class _CreateSubjectState extends State<CreateSubject> {
                       debugPrint('Error saving data: $error');
                     });
               debugPrint(subjectForm.toString());
+              Navigator.of(context).pop();
             }
           },
           child: Text(

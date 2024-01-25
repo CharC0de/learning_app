@@ -33,17 +33,7 @@ class AlertDialogs {
             ),
             TextButton(
               onPressed: () async {
-                showDialog(
-                    context: context,
-                    builder: (context) => const AlertDialog(
-                            title: Center(
-                          child: CircularProgressIndicator(),
-                        )));
-                await userRef.signOut();
-                if (context.mounted) {
-                  Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => const Login()));
-                }
+                Navigator.of(context).pop();
               },
               child: const Text(
                 'Cancel',
